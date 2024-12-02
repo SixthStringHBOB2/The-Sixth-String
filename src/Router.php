@@ -1,5 +1,4 @@
 <?php
-
 class Router
 {
     private $routes = [];
@@ -27,13 +26,12 @@ class Router
 
     private function addRoute($method, $path, $callback)
     {
-        // Convert path with parameters into regex pattern
         $pattern = '#^' . preg_replace('/\{(\w+)\}/', '(?P<$1>[^/]+)', $path) . '$#';
         $this->routes[] = [
             'method' => $method,
             'pattern' => $pattern,
             'callback' => $callback,
-            'path' => $path, // For debugging purposes
+            'path' => $path,
         ];
         error_log("Debug: Added route: $method $pattern");
     }
@@ -56,7 +54,6 @@ class Router
         }
     }
 
-
     public function handleRequest()
     {
         $requestUri = strtok($_SERVER['REQUEST_URI'], '?');
@@ -70,7 +67,6 @@ class Router
 
         error_log("Debug: Processed URI after base path adjustment: $requestUri");
 
-        // Check for static assets (CSS, images, etc.)
         $this->serveStatic($requestUri, __DIR__);
 
         parse_str(isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '', $queryParams);
@@ -83,8 +79,10 @@ class Router
                 preg_match($route['pattern'], $requestUri, $matches)
             ) {
                 error_log("Debug: Matched route: {$route['path']} with pattern {$route['pattern']}");
-                $matches = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
-                $arguments = array_merge($matches, [$queryParams]);
+
+                $arguments = array_values(array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY));
+                $arguments[] = $queryParams;
+
                 call_user_func_array($route['callback'], $arguments);
                 return;
             }

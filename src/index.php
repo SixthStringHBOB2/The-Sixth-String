@@ -9,8 +9,7 @@ $router->get('/', function () {
 });
 
 $router->get('/post/{id}', function ($id, $queryParams) {
-    echo "Post ID: $id<br>";
-    echo "Query Params: " . json_encode($queryParams);
+    include 'views/home.php';
 });
 
 $router->get('/search', function ($queryParams) {
