@@ -17,6 +17,10 @@ $router->get('/search', function ($queryParams) {
     echo "Search query: $searchQuery";
 });
 
+$router->get('/shoppingcart', function () {
+    include 'views/shoppingcart.php';
+});
+
 $router->serveStatic($_SERVER['REQUEST_URI'], __DIR__);
 
 $router->handleRequest();
