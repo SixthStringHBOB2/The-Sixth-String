@@ -24,5 +24,3 @@ EXPOSE 80
 
 # Use the entrypoint script to start migrations and Apache
 ENTRYPOINT ["bash", "/usr/local/bin/entrypoint.sh"]
-
-
