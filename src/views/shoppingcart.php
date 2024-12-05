@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amounts'])) {
         const hiddenInput = document.getElementById('hiddenInput_' + productId);
 
         if (element && hiddenInput) {
-            let value = parseInt(hiddenInput.value, 10) || 0;
+            let value = parseInt(element.innerHTML);
             value++;
             element.innerHTML = value;
             hiddenInput.value = value;
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amounts'])) {
         const element = document.getElementById('incrementText_' + productId);
 
         if (element && hiddenInput) {
-            let value = parseInt(hiddenInput.value, 10) || 0;
+            let value = parseInt(element.innerHTML);
             if (value > 0) {
                 value--;
             }
