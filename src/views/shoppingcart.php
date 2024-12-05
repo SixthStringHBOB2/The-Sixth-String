@@ -36,6 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amounts'])) {
     foreach ($_POST['amounts'] as $productId => $amount) {
         if (isset($_SESSION['shoppingCart'][$productId])) {
             $_SESSION['shoppingCart'][$productId][2] = $amount;
+            if($_SESSION['shoppingCart'][$productId][2] < 1){
+                unset($_SESSION['shoppingCart'][$productId]);
+            }
         }
     }
 }
@@ -47,8 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amounts'])) {
     function incrementAmount(productId) {
         const element = document.getElementById('incrementText_' + productId);
         const hiddenInput = document.getElementById('hiddenInput_' + productId);
+
         if (element && hiddenInput) {
-            let value = parseInt(element.innerHTML);
+            let value = parseInt(hiddenInput.value, 10) || 0;
             value++;
             element.innerHTML = value;
             hiddenInput.value = value;
@@ -59,8 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amounts'])) {
     function decrementAmount(productId) {
         const hiddenInput = document.getElementById('hiddenInput_' + productId);
         const element = document.getElementById('incrementText_' + productId);
+
         if (element && hiddenInput) {
-            let value = parseInt(element.innerHTML);
+            let value = parseInt(hiddenInput.value, 10) || 0;
             if (value > 0) {
                 value--;
             }
@@ -98,14 +103,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amounts'])) {
                     <td>$productId</td> 
                     <td>$productName</td> 
                     <td>
+                        <button type='submit' onclick='incrementAmount(\"$productId\")'>+</button>
+                    </td>
+                    <td>
                         <label id='incrementText_$productId'>$amount</label>
                         <input type='hidden' name='amounts[$productId]' id='hiddenInput_$productId' value='$amount'>
                     </td> 
                     <td>
-                        <button type='button' onclick='incrementAmount(\"$productId\")'>Increment</button>
-                    </td>
-                    <td>
-                        <button type='button' onclick='decrementAmount(\"$productId\")'>Subtract</button>
+                        <button type='submit' onclick='decrementAmount(\"$productId\")'>-</button>
                     </td>
                 </tr>
             ";
