@@ -2,29 +2,11 @@
 
 <?php
 session_start();
-function db_connect()
-{
-    $host = 'localhost';
-    $username = 'admin';
-    $password = 'admin';
-    $database = 'admin';
-
-// Create connection
-    return mysqli($host, $username, $password, $database);
-}
-
-function get_all_tables()
-{
-    $db_connection = db_connect();
-    $query = "SHOW TABLES";
-    $result = mysqli_fetch_all(mysqli_query($db_connection, $query));
-    mysqli_close($db_connection);
-    return $result;
-}
-
+include ('db.php');
 $amount = 1;
+$userLoggedIn = true;
 // dummy products, this is how we expect it to be stored in the session. Everything should be a variable so id1 and product 1 are varibale. The number at the end is how much the customer wants
-$_SESSION['productId'] = [
+$_SESSION['shoppingCart'] = [
     "id1" => ["id1", "product 1", $amount],
     "id2" => ["id2", "product 2", $amount],
     "id3" => ["id3", "product 3", $amount],
@@ -34,29 +16,59 @@ $_SESSION['productId'] = [
     "id7" => ["id7", "product 7", $amount]
 ];
 
+function checkIfShoppingAlreadyExist($userLoggedIn){
+    //check if user is logged in, if user is NOT logged in skip this function
+    //the variable i am using to check if user is logged in is placeholder for the real one
+
+    if($userLoggedIn){
+        $dbConnection = getDbConnection();
+        $query = "SELECT count(*) FROM shoppingcart";
+        $queryResult = mysqli_fetch_all(mysqli_query($dbConnection, $query));
+
+        //TODO map $queryResult to $_SESSION['productId'] and fill it or update it? idk need to check it
+    }
+}
+
+
+//Code below updates the amount the customer wants to buy to the php session variable
+//it gets the value from the hidden input field which is being updated with js
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amounts'])) {
+    foreach ($_POST['amounts'] as $productId => $amount) {
+        if (isset($_SESSION['shoppingCart'][$productId])) {
+            $_SESSION['shoppingCart'][$productId][2] = $amount;
+        }
+    }
+}
+
 ?>
 <script>
+    //code below updates the amount the customer wants to buy on the client side and the hidden input field so php can get the variable from there
+    //could also write a mapping but that is too much work... :)
     function incrementAmount(productId) {
         const element = document.getElementById('incrementText_' + productId);
-        if (element) {
+        const hiddenInput = document.getElementById('hiddenInput_' + productId);
+        if (element && hiddenInput) {
             let value = parseInt(element.innerHTML);
             value++;
             element.innerHTML = value;
+            hiddenInput.value = value;
         }
     }
-
+    //code below updates the amount the customer wants to buy on the client side and the hidden input field so php can get the variable from there
+    //could also write a mapping but that is too much work... :)
     function decrementAmount(productId) {
+        const hiddenInput = document.getElementById('hiddenInput_' + productId);
         const element = document.getElementById('incrementText_' + productId);
-        if (element) {
+        if (element && hiddenInput) {
             let value = parseInt(element.innerHTML);
             if (value > 0) {
                 value--;
             }
             element.innerHTML = value;
+            hiddenInput.value = value;
         }
     }
 </script>
-
 
 <head>
     <title>Shopping Cart</title>
@@ -65,39 +77,51 @@ $_SESSION['productId'] = [
 
 <body>
     <h1>Shopping Cart</h1>
-<table>
-    <tr>
-        <th>Plaatje</th>
-        <th>Product ID</th>
-        <th>Product naam</th>
-        <th>aantal</th>
-    </tr>
-    <?php
-    foreach ($_SESSION['productId'] as $product) {
-        $productId = $product[0];  // The product ID
-        $productName = $product[1];  // The product name
-        $amount = $product[2];  // The amount
 
-        echo "
+    <form method="POST" action="/shoppingcart">
+        <table>
             <tr>
-                <td>plaatje</td>
-                <td>$productId</td> 
-                <td>$productName</td> 
-                <td><label id='incrementText_$productId'>$amount</label></td> 
-                <td>
-                    <button type='button' onclick='incrementAmount(\"$productId\")'>Increment</button>
-                </td>
-                <td>
-                    <button type='button' onclick='decrementAmount(\"$productId\")'>Subtract</button>
-                </td>
+                <th>Plaatje</th>
+                <th>Product ID</th>
+                <th>Product naam</th>
+                <th>aantal</th>
             </tr>
-        ";
-    }
-    ?>
-</table>
+            <?php
+            foreach ($_SESSION['shoppingCart'] as $product) {
+                $productId = $product[0];  // The product ID
+                $productName = $product[1];  // The product name
+                $amount = $product[2];  // The amount
 
+                echo "
+                <tr>
+                    <td>plaatje</td>
+                    <td>$productId</td> 
+                    <td>$productName</td> 
+                    <td>
+                        <label id='incrementText_$productId'>$amount</label>
+                        <input type='hidden' name='amounts[$productId]' id='hiddenInput_$productId' value='$amount'>
+                    </td> 
+                    <td>
+                        <button type='button' onclick='incrementAmount(\"$productId\")'>Increment</button>
+                    </td>
+                    <td>
+                        <button type='button' onclick='decrementAmount(\"$productId\")'>Subtract</button>
+                    </td>
+                </tr>
+            ";
+            }
+            ?>
+        </table>
+        <br>
+        <input type="submit" name="PurchaseButton" value="Koop winkelwagen">
+    </form>
+<?php
+// leave the echo here for testing purpose so people can see what happens before we add styling and such
+    $productIdToCheck = "id4";
+    echo "Updated Quantity for Product $productIdToCheck: " . $_SESSION['shoppingCart'][$productIdToCheck][2];
+?>
 </body>
 <footer>
-    <!--    include footer -->
+
 </footer>
 </html>

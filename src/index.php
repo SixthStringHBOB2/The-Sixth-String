@@ -21,6 +21,15 @@ $router->get('/shoppingcart', function () {
     include 'views/shoppingcart.php';
 });
 
+$router->post('/shoppingcart', function () {
+    include 'views/shoppingcart.php';
+});
+
+
+$router->get('/purchase', function () {
+    include 'views/purchase.php';
+});
+
 $router->serveStatic($_SERVER['REQUEST_URI'], __DIR__);
 
 $router->handleRequest();
