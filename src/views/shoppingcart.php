@@ -118,11 +118,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amounts'])) {
             ?>
         </table>
         <br>
-        <input type="submit" name="PurchaseButton" value="Koop winkelwagen">
+        <input type="submit" name="PurchaseButton" value="Koop winkelwagen"> <!--TODO once this button is pressed the user buys the shit, make it so that the bestellingen table in db gets updated -->
     </form>
 <?php
 // leave the echo here for testing purpose so people can see what happens before we add styling and such
-    $productIdToCheck = "id4";
+    $productIdToCheck = "id5";
     echo "Updated Quantity for Product $productIdToCheck: " . $_SESSION['shoppingCart'][$productIdToCheck][2];
 ?>
 </body>
