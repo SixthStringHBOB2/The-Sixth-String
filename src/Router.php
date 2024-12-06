@@ -1,4 +1,5 @@
 <?php
+
 class Router
 {
     private $routes = [];
@@ -39,10 +40,23 @@ class Router
     public function serveStatic($uri, $filePath)
     {
         if (preg_match('/^\/assets\//', $uri)) {
-            $assetPath = $filePath . '/public' . str_replace('/assets', '', $uri);
+            $assetPath = $filePath . str_replace('/assets', '/public', $uri);
 
             if (file_exists($assetPath)) {
-                header("Content-Type: " . mime_content_type($assetPath));
+                $mimeType = mime_content_type($assetPath);
+
+                $mimeTypeOverrides = [
+                    'css' => 'text/css',
+                    'js' => 'application/javascript',
+                    'html' => 'text/html',
+                ];
+
+                $extension = pathinfo($assetPath, PATHINFO_EXTENSION);
+                if (array_key_exists($extension, $mimeTypeOverrides)) {
+                    $mimeType = $mimeTypeOverrides[$extension];
+                }
+
+                header("Content-Type: $mimeType");
                 readfile($assetPath);
                 exit;
             } else {
