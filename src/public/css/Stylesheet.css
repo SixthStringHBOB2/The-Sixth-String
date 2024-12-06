@@ -1,0 +1,151 @@
+/*ALGEMENE OPMAAK WEBSITE
+----------------------*/
+html {
+    font-family: Inter, sans-serif, Arial, sans-serif;
+    color: white;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+
+/*  ALGEMENE TEKST OPMAAK
+------------------------*/
+
+p {
+    color: black;
+}
+
+.link1 {
+    text-decoration-line: underline;
+    font-weight: bold;
+    color: #444C50;
+    Padding: 0px 10px;
+    margin: 0px;
+}
+
+.link2 {
+    text-decoration-line: underline;
+    font-size: 16px;
+    font-weight: light;
+    color: white;
+    Padding: 5px 0px;
+    margin: 5px 0px;
+}
+
+.link3 {
+    text-decoration-line: underline;
+    font-weight: light;
+    color: #444C50;
+    Padding: 0px 10px;
+    margin: 0px;
+}
+
+.Arrow {
+    list-style: none;
+}
+
+/*HEADERS
+---------------*/
+h1 {
+    color: white;
+    font-size: 64px;
+    font-weight: black;
+    margin: 0px;
+    text-shadow: 0px 0px 40px black;
+}
+
+.H1subtitle {
+    color: white;
+    font-size: 32px;
+    font-weight: medium;
+    margin: 0px;
+    text-shadow: 0px 0px 40px black;
+}
+
+
+h2 {
+    color: 444C50;
+    text-decoration: underline;
+    margin: 0px 0px 20px 0px
+}
+
+h3 {
+    color: #546E7A;
+    margin: 10px 0px 0px 0px
+}
+
+
+/*SPAN MODIFIERS
+--------------------*/
+.highlight {
+    color: 30B6FA
+}
+
+.extrabold {
+    font-weight: 900
+}
+
+
+/*WEBSITE ELEMENTEN
+---------------*/
+.white-seperation-bar {
+    background-color: white;
+    border-radius: 50px 50px 0px 0px;
+    height: 50px;
+}
+
+
+/*STANDAARD FLEXBOX
+------------------*/
+.flex-itemframes-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    @media (max-width: 900px) {
+        display: flex;
+        flex-direction: column;
+        margin: 0px 0px 20px 0px;
+        align-items: center;
+    }
+}
+
+
+/*CONTENT BLOKKEN*/
+.Content-standaard {
+    padding: 0px 50px;
+    height: 345px;
+}
+
+.Contenblok1 {
+    background-color: white;
+}
+
+.Banner-Img {
+    position: fixed;
+    width: 100%;
+    height: 40rem;
+    z-index: -10;
+    top: 0;
+    object-fit: Cover;
+}
+
+.item-frame1 {
+    background-color: #D9D9D9; /* HIER MOET NOG EEN GRADIENT KOMEN */
+    border-radius: 25px;
+    max-width: 300px;
+    margin: 0px 0px 20px 0px;
+}
+
+.img-item-frame1 {
+    max-width: 300px;
+    height: 150px;
+    border-radius: 25px 25px 0px 0px;
+    object-fit: fill;
+}
+
+.h3-item-frame1 {
+    padding: 0px 0px 0px 10px;
+}
