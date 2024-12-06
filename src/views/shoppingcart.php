@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amounts'])) {
 
 ?>
 <script>
+    //TODO make the two fucntions below one
     //code below updates the amount the customer wants to buy on the client side and the hidden input field so php can get the variable from there
     //could also write a mapping but that is too much work... :)
     function incrementAmount(productId) {
