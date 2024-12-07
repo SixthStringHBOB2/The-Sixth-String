@@ -2,7 +2,7 @@
 
 <?php
 session_start();
-include ('db.php');
+//include ('db.php');
 $amount = 1;
 $userLoggedIn = true;
 // dummy products, this is how we expect it to be stored in the session. Everything should be a variable so id1 and product 1 are varibale. The number at the end is how much the customer wants
@@ -16,17 +16,21 @@ $_SESSION['shoppingCart'] = [
     "id7" => ["id7", "product 7", $amount]
 ];
 
+
+
+
+
 function checkIfShoppingAlreadyExist($userLoggedIn){
     //check if user is logged in, if user is NOT logged in skip this function
     //the variable i am using to check if user is logged in is placeholder for the real one
 
-    if($userLoggedIn){
-        $dbConnection = getDbConnection();
-        $query = "SELECT count(*) FROM shoppingcart";
-        $queryResult = mysqli_fetch_all(mysqli_query($dbConnection, $query));
-
-        //TODO map $queryResult to $_SESSION['productId'] and fill it or update it? idk need to check it
-    }
+//    if($userLoggedIn){
+//        $dbConnection = getDbConnection();
+//        $query = "SELECT count(*) FROM shoppingcart";
+//        $queryResult = mysqli_fetch_all(mysqli_query($dbConnection, $query));
+//
+//        //TODO map $queryResult to $_SESSION['productId'] and fill it or update it? idk need to check it
+//    }
 }
 
 
@@ -42,6 +46,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amounts'])) {
         }
     }
 }
+
+function getDbConnection() {
+//    $host = getenv('MYSQL_HOST');
+//    $dbname = getenv('MYSQL_DATABASE');
+//    $username = getenv('MYSQL_USER');
+//    $password = getenv('MYSQL_PASSWORD');
+
+    $host = "192.168.1.11";
+    $dbname = "thesixthstring";
+    $username = "rick";
+    $password = "rEN28Sd8?W|L6FquVky>";
+
+    // Check for missing environment variables
+    if (!$host || !$dbname || !$username || !$password) {
+        die('Missing environment variables for database connection');
+    }
+
+    // Create and return the MySQLi connection
+    $mysqli = new mysqli($host, $username, $password, $dbname);
+
+    if ($mysqli->connect_error) {
+        die("Connection failed: " . $mysqli->connect_error);
+    }
+
+    return $mysqli;
+}
+
+
+
+$dbConnection = getDbConnection();
+$query = "SELECT * FROM user";
+$queryResult = mysqli_fetch_all(mysqli_query($dbConnection, $query));
 
 ?>
 <script>
@@ -124,7 +160,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amounts'])) {
 <?php
 // leave the echo here for testing purpose so people can see what happens before we add styling and such
     $productIdToCheck = "id5";
-    echo "Updated Quantity for Product $productIdToCheck: " . $_SESSION['shoppingCart'][$productIdToCheck][2];
+//    echo "Updated Quantity for Product $productIdToCheck: " . $_SESSION['shoppingCart'][$productIdToCheck][2];
+    print_r($queryResult);
+
+
 ?>
 </body>
 <footer>

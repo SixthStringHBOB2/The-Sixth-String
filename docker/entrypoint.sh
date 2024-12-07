@@ -5,10 +5,10 @@ set -x
 
 # Start migration process
 echo "Starting migration process..."
-if [ -f /var/www/html/database/migrations.php ]; then
-    php /var/www/html/database/migrations.php
+if [ -f /var/www/html/database/db.php ]; then
+    php /var/www/html/database/db.php
 else
-    echo "Migration script not found at /var/www/html/database/migrations.php"
+    echo "Migration script not found at /var/www/html/database/db.php"
     exit 1
 fi
 
