@@ -21,8 +21,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Expose port 80
 EXPOSE 80
+EXPOSE 3306
 
 # Use the entrypoint script to start migrations and Apache
 ENTRYPOINT ["bash", "/usr/local/bin/entrypoint.sh"]
-
-

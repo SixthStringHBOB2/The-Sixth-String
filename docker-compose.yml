@@ -24,7 +24,7 @@ services:
     volumes:
       - ./src:/var/www/html
       - ./src/public:/var/www/html/public
-      - ./src/database/migrations:/var/www/html/database/migrations
+      - ./src/database/db.php:/var/www/html/database/db.php
       - ./src/database:/var/www/html/database
       - ./docker/php.ini:/usr/local/etc/php/php.ini
       - .env:/var/www/html/.env
