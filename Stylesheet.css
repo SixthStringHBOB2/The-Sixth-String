@@ -57,7 +57,7 @@ h1{color:white;
 h2{color:444C50;
     font-size: 40px;
     text-decoration: underline;
-    margin: 0px 0px 20px 0px}
+    margin: 0px 5px 20px 0px}
 
 h3{color:#546E7A;
     font-size: 25px;
@@ -131,6 +131,21 @@ color: #546E7A}
         width: 130px;}
     }
 
+.flex-dubbel-button{
+    @media(min-width: 1200px){
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    flex-wrap: nowrap;}
+    @media (max-width: 1200px) {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: stretch;
+        width: 100%;
+    }}
+
+
 /*STANDAARD FLEXBOX
 ------------------*/
 .flex-itemframes-container{
@@ -147,8 +162,7 @@ color: #546E7A}
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    flex-wrap: wrap;
-}
+    flex-wrap: wrap;}
 
 .flex-column-standaard{
     display: flex;
@@ -166,10 +180,10 @@ color: #546E7A}
 .Contenblok1{background-color: white;}
 
 .Banner-Img{position: absolute;
-width: 100%;
-height: 40rem;
-z-index: -10;
-object-fit: Cover;}
+    width: 100%;
+    height: 40rem;
+    z-index: -10;
+    object-fit: Cover;}
 
 .item-frame1{background: linear-gradient(135deg, #D9D9D9, #FFF9F5); /* HIER MOET NOG EEN GRADIENT KOMEN */
     border-radius: 25px;
@@ -202,7 +216,6 @@ object-fit: Cover;}
     border-radius: 25px;
     object-fit: cover;
     position: absolute;}
-
 .img-rechts{
     bottom: -50px;
     right: 10%;
@@ -210,6 +223,14 @@ object-fit: Cover;}
     object-position: 0px 0px;
     @media(max-width: 900px){
         bottom: -900px}
+    }
+.img-links{
+    bottom: 23%;
+    right: 10%;
+    @media(max-width: 900px){
+        bottom: 0px;
+        right: 0px;
+        position: inherit}
     }
 
 .beschrijving-naast-img{
@@ -224,6 +245,55 @@ object-fit: Cover;}
     position: relative;}
 
 
+/*PRODUCT PAGINA
+---------------*/
+
+.beschrijving-flex{
+    @media(max-width: 900px){
+        display: flex;
+        flex-direction: column;
+        gap: 50px;
+        padding: 0px 10% 50px 10%;}
+        @media(min-width: 900px){
+        align-items: center;
+        display: inline-flex;
+        padding: 0px 8% 50px 10%;
+        width: 90%;}
+    }
+
+.beschrijving-product{
+    @media(min-width: 900px){
+    width: 30%;
+    min-height: 500px;
+    border-radius: 25px;
+    padding: 25px;
+    background: linear-gradient(135deg, #D9D9D9, #FFF9F5);
+    z-index: 2;
+    position: relative;
+    right: 20px}
+    @media(max-width: 900px){
+        width: 100%;  }
+    }
+
+.beschrijving-product-img{
+    border-radius: 25px;
+    @media(min-width: 900px){
+        width: 60%;
+        max-height: 700px;
+        border-radius: 25px;
+        object-fit: cover;
+        bottom: -50px;
+        right: 10%;
+        z-index: 1;}
+    @media(max-width: 900px){
+        width: 100%;
+        height: 40%;
+        object-fit: cover;
+        max-width: 450px;
+        max-height: 300px;
+        align-self: center;
+        }
+}
 /*ITEMS
 -------*/
 
@@ -239,6 +309,14 @@ object-fit: Cover;}
     text-color: black;
     min-width: 45%;
     align-self: center;}
+.button1:hover{
+    background: linear-gradient(whitesmoke, whitesmoke) padding-box,
+    linear-gradient(to right, #FC914E, #947957) border-box;
+    border: 2px solid transparent;
+    transition: 0.5s;
+    cursor: pointer;
+    linear-gradient(to right, #947957, #FC914E) border-box;
+    border: 2px solid transparent;}
 
 .button2{
     background-color: 61584D;
@@ -251,6 +329,7 @@ object-fit: Cover;}
     color: white;
     min-width: 45%;
     align-self: center;}
+.button2:hover{cursor: pointer;}
 
 .button3{
     background-color: white;
@@ -261,8 +340,13 @@ object-fit: Cover;}
     text-align: center;
     font-weight: light;
     text-color: black;
+    width: 70%;
     min-width: 45%;
     align-self: center;}
+.button3:hover{background-color: whitesmoke;
+    transition: 0.5s;
+    cursor: pointer;
+    font-weight: semi-bold;}
 
 .button4{
     background-color: #30B6FA;
@@ -273,5 +357,7 @@ object-fit: Cover;}
     text-align: center;
     font-weight: bold;
     color: white;
+    width: 70%;
     min-width: 45%;
     align-self: center;}
+.button4:hover{cursor: pointer;}
