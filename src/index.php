@@ -12,6 +12,10 @@ $router->get('/post/{id}', function ($id, $queryParams) {
     include 'views/home.php';
 });
 
+$router->get('/products', function () {
+    include 'views/products.php';
+});
+
 $router->get('/search', function ($queryParams) {
     $searchQuery = isset($queryParams['q']) ? $queryParams['q'] : 'No query';
     echo "Search query: $searchQuery";
