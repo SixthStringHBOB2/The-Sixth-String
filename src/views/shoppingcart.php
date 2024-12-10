@@ -2,23 +2,20 @@
 
 <?php
 session_start();
-//include ('db.php');
-$amount = 1;
+//require ('database/db.php');
+$amount = 500;
 $userLoggedIn = true;
+
 // dummy products, this is how we expect it to be stored in the session. Everything should be a variable so id1 and product 1 are varibale. The number at the end is how much the customer wants
 $_SESSION['shoppingCart'] = [
-    "id1" => ["id1", "product 1", $amount],
-    "id2" => ["id2", "product 2", $amount],
-    "id3" => ["id3", "product 3", $amount],
-    "id4" => ["id4", "product 4", $amount],
-    "id5" => ["id5", "product 5", $amount],
-    "id6" => ["id6", "product 6", $amount],
-    "id7" => ["id7", "product 7", $amount]
+    "id1" => ["1", "product 1", $amount],
+    "id2" => ["2", "product 2", $amount],
+    "id3" => ["3", "product 3", $amount],
+    "id4" => ["4", "product 4", $amount],
+    "id5" => ["5", "product 5", $amount],
+    "id6" => ["6", "product 6", $amount],
+    "id7" => ["7", "product 7", $amount]
 ];
-
-
-
-
 
 function checkIfShoppingAlreadyExist($userLoggedIn){
     //check if user is logged in, if user is NOT logged in skip this function
@@ -36,23 +33,45 @@ function checkIfShoppingAlreadyExist($userLoggedIn){
 
 //Code below updates the amount the customer wants to buy to the php session variable
 //it gets the value from the hidden input field which is being updated with js
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['amounts'])) {
-    foreach ($_POST['amounts'] as $productId => $amount) {
-        if (isset($_SESSION['shoppingCart'][$productId])) {
-            $_SESSION['shoppingCart'][$productId][2] = $amount;
-            if($_SESSION['shoppingCart'][$productId][2] < 1){
-                unset($_SESSION['shoppingCart'][$productId]);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['formType'])) {
+        // Determine which form was submitted
+        if ($_POST['formType'] === 'updateCart' && isset($_POST['amounts'])) {
+            // Handle cart updates
+            foreach ($_POST['amounts'] as $productId => $amount) {
+                if (isset($_SESSION['shoppingCart'][$productId])) {
+                    // Update the amount or remove the item if amount is less than 1
+                    if ($amount > 0) {
+                        $_SESSION['shoppingCart'][$productId][2] = $amount;
+                    } else {
+                        unset($_SESSION['shoppingCart'][$productId]);
+                    }
+                }
             }
+        }
+        if ($_POST['formType'] === 'purchaseCart' && isset($_POST['PurchaseButton'])) {
+            updateToDatabase();
         }
     }
 }
+function updateToDatabase(){
+    foreach ($_SESSION['shoppingCart'] as $product) {
+        $productId = $product[0];
+        $amount = $product[2];
+
+        $dbConnection = getDBConnection();
+        $sql = "INSERT INTO shopping_cart_item (id_item, amount) VALUES ($productId, $amount)";
+        echo"godverdomme2";
+
+        mysqli_query($dbConnection, $sql);
+        echo"dadada";
+        mysqli_close($dbConnection);
+    }
+}
+
+
 
 function getDbConnection() {
-//    $host = getenv('MYSQL_HOST');
-//    $dbname = getenv('MYSQL_DATABASE');
-//    $username = getenv('MYSQL_USER');
-//    $password = getenv('MYSQL_PASSWORD');
-
     $host = "192.168.1.11";
     $dbname = "thesixthstring";
     $username = "default";
@@ -114,13 +133,12 @@ $queryResult = mysqli_fetch_all(mysqli_query($dbConnection, $query));
 
 <head>
     <title>Shopping Cart</title>
-    <!--        include header-->
 </head>
 
 <body>
     <h1>Shopping Cart</h1>
-
     <form method="POST" action="/shoppingcart">
+        <input type="hidden" name="formType" value="updateCart">
         <table>
             <tr>
                 <th>Plaatje</th>
@@ -155,7 +173,11 @@ $queryResult = mysqli_fetch_all(mysqli_query($dbConnection, $query));
             ?>
         </table>
         <br>
-        <input type="submit" name="PurchaseButton" value="Koop winkelwagen"> <!--TODO once this button is pressed the user buys the shit, make it so that the bestellingen table in db gets updated -->
+<!--        <input type="submit" name="PurchaseButton" value="Koop winkelwagen">-->
+    </form>
+    <form method="POST" action="/shoppingcart">
+        <input type="hidden" name="formType" value="purchaseCart"> <!-- Identify this as the purchase form -->
+        <input type="submit" name="PurchaseButton" value="Koop winkelwagen">
     </form>
 <?php
 // leave the echo here for testing purpose so people can see what happens before we add styling and such
