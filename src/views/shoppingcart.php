@@ -2,24 +2,25 @@
 
 <?php
 session_start();
-//require ('database/db.php');
-$amount = 501;
+include  'database/db.php'; //TODO fix this
 $userLoggedIn = true;
-$_SESSION['LoggedInUser'] = ["user" => ["1"]];
+$_SESSION['LoggedInUser'] = 1;
 // dummy products, this is how we expect it to be stored in the session. Everything should be a variable so id1 and product 1 are varibale. The number at the end is how much the customer wants
-$_SESSION['shoppingCart'] = [
-    "id1" => ["1", "product 1", "15,50", $amount],
-    "id2" => ["2", "product 2", "15,50", $amount],
-    "id3" => ["3", "product 3", "15,50", $amount],
-];
+// this is only there so people have an example of how we expect it to be stored, if you uncomment below it makes the site buggy af lol
+//$_SESSION['shoppingCart'] = [
+//    "id1" => ["1", "product 1", "15,50", 1],
+//    "id2" => ["2", "product 2", "15,50", 1],
+//    "id3" => ["3", "product 3", "15,50", 1],
+//];
 
 if(isset($_SESSION['LoggedInUser'])){
     $dbConnection = getDbConnection();
+    $userId = $_SESSION['LoggedInUser'];
     $query = "SELECT sci.amount, sci.id_item, i.`name`, i.`price`
-              FROM shopping_cart sc
-              LEFT JOIN shopping_cart_item sci ON sc.id_shopping_cart_item = sci.id_shopping_cart_item
-              LEFT JOIN item i ON sci.id_item = i.id_item
-              WHERE sc.id_user = 1"; //TODO make the userId variable
+                FROM shopping_cart sc
+                LEFT JOIN shopping_cart_item sci ON sc.id_shopping_cart = sci.id_shopping_cart
+                LEFT JOIN item i ON sci.id_item = i.id_item
+                WHERE sc.id_user = $userId"; //TODO make the userId variable
 
     $queryResult = mysqli_query($dbConnection, $query);
 
@@ -41,81 +42,84 @@ if(isset($_SESSION['LoggedInUser'])){
                 $itemAmount
             ];
         }
-    }else {
-        //TODO make one shopping_cart
     }
-
-
-
-    echo "<pre>";
-    print_r($_SESSION['shoppingCart']);
-    echo "</pre>";
 }
 
 //Code below updates the amount the customer wants to buy to the php session variable
 //it gets the value from the hidden input field which is being updated with js
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['formType'])) {
-        // Determine which form was submitted
-        if ($_POST['formType'] === 'updateCart' && isset($_POST['amounts'])) {
-            // Handle cart updates
+        // Update the shopping cart amount
+        if ($_POST['formType'] === 'purchaseCart' && isset($_POST['amounts'])) {
             foreach ($_POST['amounts'] as $productId => $amount) {
                 if (isset($_SESSION['shoppingCart'][$productId])) {
-                    // Update the amount or remove the item if amount is less than 1
                     if ($amount > 0) {
-                        $_SESSION['shoppingCart'][$productId][2] = $amount;
+                        $_SESSION['shoppingCart'][$productId][3] = $amount;  // Update the amount in session
                     } else {
-                        unset($_SESSION['shoppingCart'][$productId]);
+                        unset($_SESSION['shoppingCart'][$productId]);  // Remove product if amount is 0
                     }
                 }
             }
+            // update the database
+            if (isset($_POST['PurchaseButton2'])) {
+                if (isset($_SESSION['LoggedInUser'])) {
+                    $userId = $_SESSION['LoggedInUser'];
+                    $dbConnection = getDbConnection();
+
+                    // check if there is a shopping_cart_item for the user and get the ids
+                    $sqlCheckIfThereIsShopping_cart_item = "
+                        SELECT sci.id_shopping_cart, sci.id_item
+                        FROM shopping_cart_item sci
+                        LEFT JOIN shopping_cart sc ON sci.id_shopping_cart = sc.id_shopping_cart
+                        WHERE sc.id_user = $userId"; // Use $userId dynamically
+
+                    $queryResult = mysqli_query($dbConnection, $sqlCheckIfThereIsShopping_cart_item);
+
+                    if ($queryResult) {
+                        $columns = mysqli_fetch_all($queryResult, MYSQLI_ASSOC);
+                        // loop through each shopping cart item for the user
+                        foreach ($columns as $column) {
+                            $shoppingCartId = $column['id_shopping_cart'];
+                            $itemIdFromShoppingCart = $column['id_item'];
+
+                            // Loop through each product in the shopping cart
+                            foreach ($_SESSION['shoppingCart'] as $product) {
+                                $productId = $product[0];
+                                $amount = $product[3];
+
+                                // Check if the item already exists in the users cart
+                                $sqlCheckItemExistenceInDatabase = "
+                                    SELECT id_shopping_cart
+                                    FROM shopping_cart_item
+                                    WHERE id_shopping_cart = $shoppingCartId AND id_item = $productId";
+
+                                $itemExistResult = mysqli_query($dbConnection, $sqlCheckItemExistenceInDatabase);
+
+                                if (mysqli_num_rows($itemExistResult) > 0) {
+                                    // update the amount
+                                    $sqlUpdate = "
+                                        UPDATE shopping_cart_item
+                                        SET amount = $amount
+                                        WHERE id_shopping_cart = $shoppingCartId AND id_item = $productId";
+
+                                    $updateResult = mysqli_query($dbConnection, $sqlUpdate);
+                                } else {
+                                    // insert a new record
+                                    $sqlInsert = "
+                                        INSERT INTO shopping_cart_item (id_shopping_cart, id_item, amount)
+                                        VALUES ($shoppingCartId, $productId, $amount)";
+
+                                    mysqli_query($dbConnection, $sqlInsert);
+                                }
+                            }
+                        }
+                    }
+                    mysqli_close($dbConnection);
+                }
+            }
         }
-        if ($_POST['formType'] === 'purchaseCart' && isset($_POST['PurchaseButton'])) {
-            updateToDatabase();
-        }
     }
 }
-function updateToDatabase(){
-    foreach ($_SESSION['shoppingCart'] as $product) {
-        $productId = $product[0];
-        $amount = $product[3];
-
-        $dbConnection = getDBConnection();
-        $sql = "INSERT INTO shopping_cart_item (id_item, amount) VALUES ($productId, $amount)";
-
-        mysqli_query($dbConnection, $sql);
-        mysqli_close($dbConnection);
-    }
-}
-
-
-
-function getDbConnection() {
-    $host = "192.168.1.11";
-    $dbname = "thesixthstring";
-    $username = "default";
-    $password = "rEN28Sd8?W|L6FquVky>";
-
-    // Check for missing environment variables
-    if (!$host || !$dbname || !$username || !$password) {
-        die('Missing environment variables for database connection');
-    }
-
-    // Create and return the MySQLi connection
-    $mysqli = new mysqli($host, $username, $password, $dbname);
-
-    if ($mysqli->connect_error) {
-        die("Connection failed: " . $mysqli->connect_error);
-    }
-
-    return $mysqli;
-}
-
-
-
-//$dbConnection = getDbConnection();
-//$query = "SELECT * FROM user";
-//$queryResult = mysqli_fetch_all(mysqli_query($dbConnection, $query));
 
 ?>
 <script>
@@ -170,7 +174,7 @@ function getDbConnection() {
             foreach ($_SESSION['shoppingCart'] as $product) {
                 $productId = $product[0];  // The product ID
                 $productName = $product[1];  // The product name
-                $productPrice = $product[2];
+                $productPrice = $product[2]; // The product price
                 $amount = $product[3];  // The amount
 
                 echo "
@@ -180,14 +184,14 @@ function getDbConnection() {
                     <td>$productPrice</td> 
                     <td>$productName</td> 
                     <td>
-                        <button type='submit' onclick='incrementAmount(\"$productId\")'>+</button>
+                        <button type='button' onclick='incrementAmount(\"$productId\")'>+</button>
                     </td>
                     <td>
                         <label id='incrementText_$productId'>$amount</label>
                         <input type='hidden' name='amounts[$productId]' id='hiddenInput_$productId' value='$amount'>
                     </td> 
                     <td>
-                        <button type='submit' onclick='decrementAmount(\"$productId\")'>-</button>
+                        <button type='button' onclick='decrementAmount(\"$productId\")'>-</button>
                     </td>
                 </tr>
             ";
@@ -195,17 +199,9 @@ function getDbConnection() {
             ?>
         </table>
         <br>
+        <input type="hidden" name="formType" value="purchaseCart">
+        <input type="submit" name="PurchaseButton2" value="Koop winkelwagen">
     </form>
-    <form method="POST" action="/shoppingcart">
-        <input type="hidden" name="formType" value="purchaseCart"> <!-- Identify this as the purchase form -->
-        <input type="submit" name="PurchaseButton" value="Koop winkelwagen">
-    </form>
-<?php
-// leave the echo here for testing purpose so people can see what happens before we add styling and such
-    $productIdToCheck = "id2";
-    echo "Updated Quantity for Product $productIdToCheck: " . $_SESSION['shoppingCart'][$productIdToCheck][3];
-//    print_r($queryResult);
-?>
 </body>
 <footer>
 
