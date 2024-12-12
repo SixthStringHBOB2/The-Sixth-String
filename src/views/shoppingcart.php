@@ -42,8 +42,6 @@ if(isset($_SESSION['LoggedInUser'])){
                 $itemAmount
             ];
         }
-    }else{
-        //todo create one
     }
 }
 
