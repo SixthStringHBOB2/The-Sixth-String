@@ -4,14 +4,14 @@
 session_start();
 include  'database/db.php'; //TODO fix this
 $userLoggedIn = true;
-$_SESSION['LoggedInUser'] = 1;
+$_SESSION['LoggedInUser'] = 0;
 // dummy products, this is how we expect it to be stored in the session. Everything should be a variable so id1 and product 1 are varibale. The number at the end is how much the customer wants
 // this is only there so people have an example of how we expect it to be stored, if you uncomment below it makes the site buggy af lol
-//$_SESSION['shoppingCart'] = [
-//    "id1" => ["1", "product 1", "15,50", 1],
-//    "id2" => ["2", "product 2", "15,50", 1],
-//    "id3" => ["3", "product 3", "15,50", 1],
-//];
+$_SESSION['shoppingCart'] = [
+    1 => [1, "product 1", "15,50", 1],
+    2 => [2, "product 2", "15,50", 1],
+    3 => [3, "product 3", "15,50", 1],
+];
 
 if(isset($_SESSION['LoggedInUser'])){
     $dbConnection = getDbConnection();
@@ -77,7 +77,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_POST['PurchaseButton2'])) {
                 if (isset($_SESSION['LoggedInUser'])) {
                     $userId = $_SESSION['LoggedInUser'];
-
                     // check if there is a shopping_cart_item for the user and get the ids
                     $sqlCheckIfThereIsShopping_cart_item = "
                         SELECT sci.id_shopping_cart, sci.id_item
