@@ -42,6 +42,8 @@ if(isset($_SESSION['LoggedInUser'])){
                 $itemAmount
             ];
         }
+    }else{
+        //todo create one
     }
 }
 
@@ -51,12 +53,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['formType'])) {
         // Update the shopping cart amount
         if ($_POST['formType'] === 'purchaseCart' && isset($_POST['amounts'])) {
+            $dbConnection = getDbConnection();
             foreach ($_POST['amounts'] as $productId => $amount) {
                 if (isset($_SESSION['shoppingCart'][$productId])) {
                     if ($amount > 0) {
                         $_SESSION['shoppingCart'][$productId][3] = $amount;  // Update the amount in session
                     } else {
-                        unset($_SESSION['shoppingCart'][$productId]);  // Remove product if amount is 0
+                        if(isset($_SESSION['LoggedInUser'])){
+                            $productId = $_SESSION['shoppingCart'][$productId][0];
+                            $userId = $_SESSION['LoggedInUser'];
+                            $sqlQueryToDeleteFromShoppingCart = "DELETE sci
+                                    FROM shopping_cart_item sci
+                                    LEFT JOIN shopping_cart sc ON sci.id_shopping_cart = sc.id_shopping_cart
+                                    WHERE sci.id_item = $productId  AND sc.id_user = $userId;
+                                    ";
+                            mysqli_query($dbConnection, $sqlQueryToDeleteFromShoppingCart);
+                        }
+                        unset($_SESSION['shoppingCart'][$productId]);  // Remove product from session if amount is 0
                     }
                 }
             }
@@ -64,7 +77,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_POST['PurchaseButton2'])) {
                 if (isset($_SESSION['LoggedInUser'])) {
                     $userId = $_SESSION['LoggedInUser'];
-                    $dbConnection = getDbConnection();
 
                     // check if there is a shopping_cart_item for the user and get the ids
                     $sqlCheckIfThereIsShopping_cart_item = "
@@ -184,14 +196,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <td>$productPrice</td> 
                     <td>$productName</td> 
                     <td>
-                        <button type='button' onclick='incrementAmount(\"$productId\")'>+</button>
+                        <button type='submit' onclick='incrementAmount(\"$productId\")'>+</button>
                     </td>
                     <td>
                         <label id='incrementText_$productId'>$amount</label>
                         <input type='hidden' name='amounts[$productId]' id='hiddenInput_$productId' value='$amount'>
                     </td> 
                     <td>
-                        <button type='button' onclick='decrementAmount(\"$productId\")'>-</button>
+                        <button type='submit' onclick='decrementAmount(\"$productId\")'>-</button>
                     </td>
                 </tr>
             ";
