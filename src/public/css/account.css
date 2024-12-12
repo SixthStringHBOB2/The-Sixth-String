@@ -1,0 +1,116 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+    background-color: #D9D9D9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    flex-direction: row;
+    margin: auto;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Match shadow with form */
+    overflow: hidden;
+    width: 80%;
+    min-width: 800px;
+}
+
+.logout-section {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.logout-button {
+    background: linear-gradient(to right, #C7914E, #61584D);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 15px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-weight: bold;
+}
+
+.logout-button:hover {
+    background: linear-gradient(to right, #61584D, #C7914E);
+    transform: scale(1.05);
+}
+
+.logout-button:focus {
+    outline: none;
+}
+
+
+.sidebar {
+    width: 250px;
+    background-color: #2c3e50;
+    color: white;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar h3 {
+    margin-top: 0;
+    font-size: 20px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0 0;
+}
+
+.sidebar ul li {
+    margin-bottom: 10px;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #ecf0f1;
+    font-size: 16px;
+}
+
+.sidebar ul li a:hover {
+    color: #3498db;
+}
+
+.account-content {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #bfbfbf;
+}
+
+.account-content h1 {
+    font-size: 24px;
+    margin-top: 0;
+    color: #34495e;
+}
+
+.user-info {
+    margin-top: 20px;
+}
+
+.user-info h2 {
+    font-size: 20px;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.user-info p {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #272727;
+}
+
+.user-info p strong {
+    color: #34495e;
+}
