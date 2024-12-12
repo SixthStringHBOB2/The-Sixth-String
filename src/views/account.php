@@ -23,7 +23,7 @@
         <h1>Welkom, <?php echo htmlspecialchars($userName); ?>!</h1>
         <div class="user-info">
             <h2>Uw Persoonlijke Gegevens</h2>
-            <p><strong>E-mail:</strong> <?php echo htmlspecialchars($userData['email']); ?></p>
+            <p><strong>E-mail:</strong> <?php echo htmlspecialchars($userData['email_address']); ?></p>
             <p><strong>Voornaam:</strong> <?php echo htmlspecialchars($userData['first_name']); ?></p>
             <p><strong>Achternaam:</strong> <?php echo htmlspecialchars($userData['last_name']); ?></p>
 
