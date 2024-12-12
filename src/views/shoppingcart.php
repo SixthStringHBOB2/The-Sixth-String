@@ -125,8 +125,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             }
                         }
                     }
+                    //todo make the order table for when the user is logged in
                     mysqli_close($dbConnection);
                 }
+                //TODO make the order table for when the user is not logged in
             }
         }
     }
