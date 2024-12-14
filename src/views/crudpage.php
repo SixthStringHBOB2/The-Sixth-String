@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 include 'database/db.php';
 
 $dbconnection = getDbConnection();
-$sqlGetAllItems = "SELECT * FROM item";
+$sqlGetAllItems = "SELECT * FROM item"; //TODO add where statement to check visability
 $result = mysqli_query($dbconnection, $sqlGetAllItems);
 mysqli_close($dbconnection);
 //$allItems = mysqli_fetch_assoc($result);
