@@ -55,7 +55,11 @@ function createItem(){
 }
 
 function deleteItem($id_item) {
-
+    //TODO query below needs to be executed in that order before an item can be deleted. An order is not something we should be deleting.... How can we fix that. Perhaps an extra table called item_old.
+    //DELETE FROM order_detail WHERE id_item = 1;
+    //DELETE FROM review WHERE id_item = 1;
+    //DELETE FROM shopping_cart_item WHERE id_item = 1;
+    //DELETE FROM item WHERE id_item = 1;
 }
 
 function updateDatabase($id_item){
