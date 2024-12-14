@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     //get created order id
                     $lastInsertedId = mysqli_insert_id($dbConnection);
-                    //createOrderDetail($lastInsertedId);
+                    createOrderDetail($lastInsertedId);
 
                     //TODO clear shopping_cart_item createOrderDetail($lastInsertedId) is done;
                 }
