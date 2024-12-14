@@ -29,9 +29,16 @@ $router->post('/shoppingcart', function () {
     include 'views/shoppingcart.php';
 });
 
-
 $router->get('/purchase', function () {
     include 'views/purchase.php';
+});
+
+$router->get('/crudpage', function () {
+    include 'views/crudpage.php';
+});
+
+$router->post('/crudpage', function () {
+    include 'views/crudpage.php';
 });
 
 $router->serveStatic($_SERVER['REQUEST_URI'], __DIR__);
