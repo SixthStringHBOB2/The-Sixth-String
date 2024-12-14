@@ -1,10 +1,10 @@
 <HTML>
 
 <?php
-session_start();
+//session_start();
 include  'database/db.php';
-$userLoggedIn = true;
-$_SESSION['LoggedInUser'] = 1;
+$userLoggedIn = 1;
+$_SESSION['LoggedInUser'] = 393;
 $current_datetime = date('Y-m-d H:i:s');
 $shoppingCartId = ""; // is set later in the first function, might seem abit weird but idk it works.
 
@@ -38,20 +38,24 @@ if(isset($_SESSION['LoggedInUser'])){
             $itemAmount = $row['amount'];
 
             $shoppingCartId = $row['id_shopping_cart'];
-
             // Add the item to the shopping cart session
-            $_SESSION['shoppingCart'][$itemId] = [
-                $itemId,
-                $itemName,
-                $itemPrice,
-                $itemAmount
-            ];
+            if(!isset($_SESSION['shoppingCart'][$itemId])){
+                $_SESSION['shoppingCart'][$itemId] = [
+                    $itemId,
+                    $itemName,
+                    $itemPrice,
+                    $itemAmount
+                ];
+
+            }else{
+                $_SESSION['shoppingCart'][$itemId][3] + $itemAmount;
+            }
         }
     }
 }
+
 //Code below updates the amount the customer wants to buy to the php session variable
 //it gets the value from the hidden input field which is being updated with js
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['formType'])) {
         if ($_POST['formType'] === 'purchaseCart' && isset($_POST['amounts'])) {
@@ -62,6 +66,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($amount > 0) {
                         $_SESSION['shoppingCart'][$productId][3] = $amount;
                         if(isset($_SESSION['LoggedInUser'])){
+                            $sqlcheckIfItemInDbExsist = "SELECT sci.id_item
+                                                        FROM shopping_cart_item sci
+                                                        LEFT JOIN shopping_cart sc ON sci.id_shopping_cart = sc.id_shopping_cart
+                                                        WHERE sc.id_user = $userId";
+
+                            $checkIfItemInDbExsist = mysqli_query($dbConnection, $sqlcheckIfItemInDbExsist);
+
+                            if ($checkIfItemInDbExsist && !mysqli_num_rows($checkIfItemInDbExsist) >= 1) {
+                                while ($row = mysqli_fetch_assoc($checkIfItemInDbExsist)) {
+                                    $productId = $row['id_item'];
+                                    $sqlInsert = "INSERT INTO shopping_cart_item (id_shopping_cart, id_item, amount)
+                                                VALUES ($shoppingCartId, $productId, $amount)";
+
+                                    mysqli_query($dbConnection, $sqlInsert);
+                                }
+                            }
                             $sqlUpdateShoppingCartItemAmount = "UPDATE shopping_cart_item
                                                                 SET amount = $amount
                                                                 WHERE id_shopping_cart = $shoppingCartId 
@@ -88,43 +108,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             // update the database
             if (isset($_POST['PurchaseButton2'])) {
-                if (isset($_SESSION['LoggedInUser'])) {
-                    $userId = $_SESSION['LoggedInUser'];
-
-                    foreach ($_SESSION['shoppingCart'] as $product) {
-                        $productId = $product[0];
-                        $amount = $product[3];
-
-                        // insert a new record
-                        $sqlInsert = "
-                                INSERT INTO shopping_cart_item (id_shopping_cart, id_item, amount)
-                                VALUES ($shoppingCartId, $productId, $amount)";
-
-                        mysqli_query($dbConnection, $sqlInsert);
-                    }
                     //create order
                     $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status, id_user) VALUES ('$current_datetime', 1, $userId)"; // the status is set to 1 for now, this is the happy flow
                     mysqli_query($dbConnection, $sqlCreateOrder);
 
                     //get created order id
                     $lastInsertedId = mysqli_insert_id($dbConnection);
-                    createOrderDetail($lastInsertedId);
+                    //createOrderDetail($lastInsertedId);
 
                     //TODO clear shopping_cart_item createOrderDetail($lastInsertedId) is done;
                 }
             }
             //TODO once db has been updated turn this on
-            //$sqlCreateOrder = "INSERT INTO `order` (order_date, id_status) VALUES ('$current_datetime', 1)"; // the status is set to 1 for now, this is the happy flow
-            //mysqli_query($dbConnection, $sqlCreateOrder);
-
-            //get created order id
-            // $lastInsertedId = mysqli_insert_id($dbConnection);
-            //createOrderDetail($lastInsertedId);
+//            $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status) VALUES ('$current_datetime', 1)"; // the status is set to 1 for now, this is the happy flow
+//            mysqli_query($dbConnection, $sqlCreateOrder);
+//
+//            //get created order id
+//             $lastInsertedId = mysqli_insert_id($dbConnection);
+//            createOrderDetail($lastInsertedId);
 
             mysqli_close($dbConnection);
         }
     }
-}
 
 function createOrderDetail($lastInsertedId){
     $dbConnection = getDbConnection();
