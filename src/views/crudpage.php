@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 include 'database/db.php';
 
 $dbconnection = getDbConnection();
-$sqlGetAllItems = "SELECT * FROM item LIMIT 5";
+$sqlGetAllItems = "SELECT * FROM item";
 $result = mysqli_query($dbconnection, $sqlGetAllItems);
 mysqli_close($dbconnection);
 //$allItems = mysqli_fetch_assoc($result);
@@ -14,19 +14,44 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     if(isset($_POST['id_item'])){
         $id_item = $_POST['id_item'];
         if(isset($_POST['delete'])) {
-            echo "delete was pressed";
             deleteItem($id_item);
         }
         if(isset($_POST['edit'])) {
-//            echo$_POST['name'];
-//            echo"<br>";
-//            $itemData = getItem($id_item, $dbconnection);
             updateDatabase($id_item);
         }
     }
     if(isset($_POST['Create'])) {
-
+        createItem();
     }
+}
+
+function createItem(){
+    $dbconnection = getDbConnection();
+    $name = $_POST['name'];
+    $colour = $_POST['colour'];
+    $price = $_POST['price'];
+    $weight = $_POST['weight'];
+    $size = $_POST['size'];
+    $amount_frets = $_POST['amount_frets'];
+    $amount_strings = $_POST['amount_strings'];
+    $consumption = $_POST['consumption'];
+    $built_in_effects = $_POST['built_in_effects'];
+    $description = $_POST['description'];
+    $discount = $_POST['discount'];
+    $is_used = $_POST['is_used'];
+    $used_damage = $_POST['used_damage'];
+    $used_age = $_POST['used_age'];
+    $id_category = $_POST['id_category'];
+    $id_brand = $_POST['id_brand'];
+
+    // Prepare the SQL query to insert data
+    $sqlCreateItem = "INSERT INTO item
+    (`name`, colour, price, weight, size, amount_frets, amount_strings, consumption, built_in_effects, `description`, discount, is_used, used_damage, used_age, id_category, id_brand)
+    VALUES
+    ('$name', '$colour', $price, $weight, $size, $amount_frets, $amount_strings, $consumption, '$built_in_effects', '$description', '$discount', '$is_used', '$used_damage', '$used_age', $id_category, $id_brand);";
+
+     mysqli_query($dbconnection, $sqlCreateItem);
+     mysqli_close($dbconnection);
 }
 
 function deleteItem($id_item) {
@@ -94,20 +119,20 @@ function updateDatabase($id_item){
                 <td><input type='text' name='id_item' readonly style='width: 60px;' required></td>
                 <td><input type='text' name='name' style='width: 100px;' required></td>
                 <td><input type='text' name='colour' style='width: 80px;' required></td>
-                <td><input type='text' name='price' style='width: 80px;' required></td>
-                <td><input type='text' name='weight' style='width: 80px;' required></td>
-                <td><input type='text' name='size' style='width: 80px;' required></td>
-                <td><input type='text' name='amount_frets' style='width: 80px;' required></td>
-                <td><input type='text' name='amount_strings' style='width: 80px;' required></td>
-                <td><input type='text' name='consumption' style='width: 80px;' required></td>
+                <td><input type='number' name='price' style='width: 80px;' step="0.01" required></td>
+                <td><input type='number' name='weight' style='width: 80px;' step="0.01" required></td>
+                <td><input type='number' name='size' style='width: 80px;' step="0.01" required></td>
+                <td><input type='number' name='amount_frets' style='width: 80px;' required></td>
+                <td><input type='number' name='amount_strings' style='width: 80px;' required></td>
+                <td><input type='number' name='consumption' style='width: 80px;' step="0.01" required></td>
                 <td><input type='text' name='built_in_effects' style='width: 120px;' required></td>
                 <td><input type='text' name='description' style='width: 120px;' required></td>
-                <td><input type='text' name='discount' style='width: 80px;' required></td>
-                <td><input type='text' name='is_used' style='width: 80px;' required></td>
+                <td><input type='number' name='discount' style='width: 80px;' step="0.01" required></td>
+                <td><input type='number' name='is_used' style='width: 80px;' required></td>
                 <td><input type='text' name='used_damage' style='width: 80px;' required></td>
-                <td><input type='text' name='used_age' style='width: 80px;' required></td>
-                <td><input type='text' name='id_category' style='width: 80px;' required></td>
-                <td><input type='text' name='id_brand' style='width: 80px;' required></td>
+                <td><input type='datetime-local' name='used_age' style='width: 80px;' required></td>
+                <td><input type='number' name='id_category' style='width: 80px;' required></td>
+                <td><input type='number' name='id_brand' style='width: 80px;' required></td>
                 <td>
                     <button type='submit' name='Create'>Aanmaken</button>
                 </td>
