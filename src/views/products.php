@@ -295,7 +295,7 @@ try {
                 const brandDiv = document.createElement('div');
                 brandDiv.classList.add('flex', 'items-center');
                 brandDiv.innerHTML = `
-                    <input type="checkbox" id="brand${brand.id_brand}" class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]" data-filter="brand" data-id="${brand.id_brand}">
+                    <input type="checkbox" id="brand${brand.id_brand}" class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]" data-filter="brand" data-id="b${brand.id_brand}">
                     <label for="brand${brand.id_brand}" class="ml-2 text-sm text-gray-700">${brand.name}</label>
                 `;
                 brandContainer.appendChild(brandDiv);
@@ -309,7 +309,7 @@ try {
                 const categoryDiv = document.createElement('div');
                 categoryDiv.classList.add('flex', 'items-center');
                 categoryDiv.innerHTML = `
-                    <input type="checkbox" id="category${category.id_category}" class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]" data-filter="category" data-id="${category.id_category}">
+                    <input type="checkbox" id="category${category.id_category}" class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]" data-filter="category" data-id="c${category.id_category}">
                     <label for="category${category.id_category}" class="ml-2 text-sm text-gray-700">${category.name}</label>
                 `;
                 categoryContainer.appendChild(categoryDiv);
@@ -387,7 +387,7 @@ try {
         }
 
         document.getElementById('applyFilters').addEventListener('click', function () {
-        updateURLWithFilters();
+            updateURLWithFilters();
         });
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -398,8 +398,8 @@ try {
             const brands = urlParams.get('brands');
             if (brands) {
                 brands.split(',').forEach(brandId => {
-                    const checkbox = document.querySelector(`[data-id="${brandId}"]`);
-                    checkbox.checked = true;
+                    const brandCheckbox = document.querySelector(`[data-id="${brandId}"]`);
+                    brandCheckbox.checked = true;
                 });
             }
 
@@ -407,8 +407,8 @@ try {
             const categories = urlParams.get('categories');
             if (categories) {
                 categories.split(',').forEach(categoryId => {
-                    const checkbox = document.querySelector(`[data-id="${categoryId}"]`);
-                    checkbox.checked = true;
+                    const categoriesCheckbox = document.querySelector(`[data-id="${categoryId}"]`);
+                    categoriesCheckbox.checked = true;
                 });
             }
 
@@ -417,6 +417,15 @@ try {
             const maxPrice = urlParams.get('maxPrice');
             if (minPrice) document.getElementById('minPrice').value = minPrice;
             if (maxPrice) document.getElementById('maxPrice').value = maxPrice;
+
+            // Apply oudheid filters
+            const states = urlParams.get('states');
+            if (states) {
+                states.split(',').forEach(stateId => {
+                    const stateCheckbox = document.querySelector(`[data-id="${stateId}"]`);
+                    stateCheckbox.checked = true;
+                });
+            }
 
             // // Apply review filters
             // const reviews = urlParams.get('reviews');
