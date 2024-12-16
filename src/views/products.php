@@ -1,6 +1,5 @@
 <?php
 include '../database/db.php';
-session_start();
 
 $items_per_page = 25;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -24,21 +23,16 @@ try {
     $total_pages = ceil($total_products / $items_per_page);
 
     // Get filter options
-    $brandsSQL = "SELECT id_brand, name FROM brand
-        ORDER BY brand.id_brand";
+    $brandsSQL = "SELECT id_brand, name FROM brand ORDER BY brand.name";
     $brands = $mysqli->query($brandsSQL);
 
-    $categoriesSQL = "SELECT id_category, name FROM category
-        ORDER BY category.id_category";
+    $categoriesSQL = "SELECT id_category, name FROM category ORDER BY category.name";
     $categories = $mysqli->query($categoriesSQL);
 
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage();
     exit();
 }
-
-// Get saved filters from session
-$savedFilters = isset($_SESSION['filters']) ? $_SESSION['filters'] : [];
 ?>
 
 <!DOCTYPE html>
@@ -186,40 +180,22 @@ $savedFilters = isset($_SESSION['filters']) ? $_SESSION['filters'] : [];
 
 <div class="container">
     <!-- Filter selection -->
-    <div class="bg-white p-6 rounded-lg shadow-md w-64">
+    <div class="bg-white p-6 rounded-lg shadow-md w-64" id="filter-bar">
         <h2 class="text-xl font-semibold mb-4 text-[#546E7A]">Welke kies jij?</h2>
 
         <!-- Brand Filter -->
-        <div class="mb-4">
+        <div class="mb-4" id="brandFilter">
             <label class="block text-sm font-medium text-[#546E7A]">Merk</label>
-            <div class="space-y-2 mt-2" id="brandFilter">
-                <?php
-                foreach ($brands as $brand) {
-                    echo '
-                        <div class="flex items-center">
-                            <input type="checkbox" id="brand' . $brand['id_brand'] . '" class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]" data-filter="brand" data-id="' . $brand['id_brand'] . '">
-                            <label for="brand' . $brand['id_brand'] . '" class="ml-2 text-sm text-gray-700">' . $brand['name'] . '</label>
-                        </div>
-                        ';
-                }
-                ?>
+            <div class="space-y-2 mt-2" id="brands">
+                <!-- Brands are added here -->
             </div>
         </div>
 
         <!-- Category Filter -->
-        <div class="mb-4">
+        <div class="mb-4" id="categoryFilter">
             <label class="block text-sm font-medium text-[#546E7A]">Categorie</label>
-            <div class="space-y-2 mt-2" id="categoryFilter">
-                <?php
-                foreach ($categories as $category) {
-                    echo '
-                        <div class="flex items-center">
-                            <input type="checkbox" id="category' . $category['id_category'] . '" class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]" data-filter="category" data-id="' . $category['id_category'] . '">
-                            <label for="category' . $category['id_category'] . '" class="ml-2 text-sm text-gray-700">' . $category['name'] . '</label>
-                        </div>
-                        ';
-                }
-                ?>
+            <div class="space-y-2 mt-2" id="categories">
+                <!-- Categories are added here -->
             </div>
         </div>
 
@@ -309,6 +285,43 @@ $savedFilters = isset($_SESSION['filters']) ? $_SESSION['filters'] : [];
     </div>
 
     <script>
+        const brands = <?= json_encode($brands->fetch_all(MYSQLI_ASSOC)); ?>;
+        const categories = <?= json_encode($categories->fetch_all(MYSQLI_ASSOC)); ?>;
+
+        // Load brand filters
+        function loadBrandFilters() {
+            const brandContainer = document.getElementById('brands');
+            brands.forEach(brand => {
+                const brandDiv = document.createElement('div');
+                brandDiv.classList.add('flex', 'items-center');
+                brandDiv.innerHTML = `
+                    <input type="checkbox" id="brand${brand.id_brand}" class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]" data-filter="brand" data-id="${brand.id_brand}">
+                    <label for="brand${brand.id_brand}" class="ml-2 text-sm text-gray-700">${brand.name}</label>
+                `;
+                brandContainer.appendChild(brandDiv);
+            });
+        }
+
+        // Load category filters
+        function loadCategoryFilters() {
+            const categoryContainer = document.getElementById('categories');
+            categories.forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.classList.add('flex', 'items-center');
+                categoryDiv.innerHTML = `
+                    <input type="checkbox" id="category${category.id_category}" class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]" data-filter="category" data-id="${category.id_category}">
+                    <label for="category${category.id_category}" class="ml-2 text-sm text-gray-700">${category.name}</label>
+                `;
+                categoryContainer.appendChild(categoryDiv);
+            });
+        }
+
+        // Load filter options on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBrandFilters();
+            loadCategoryFilters();
+        });
+
         document.getElementById('applyFilters').addEventListener('click', function () {
             // Collect data
             const selectedFilters = {
@@ -340,26 +353,11 @@ $savedFilters = isset($_SESSION['filters']) ? $_SESSION['filters'] : [];
                 selectedFilters.review = input.getAttribute('data-value');
             });
 
-            // Send data to the server
-            fetch('../public/save_filters.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(selectedFilters)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Filters saved:', data);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+            console.log(selectedFilters);
         });
     </script>
 
-
-    <div class="products">
+<div class="products">
         <div class="product-grid">
             <?php while ($product = $products->fetch_assoc()): ?>
                 <div class="product">
