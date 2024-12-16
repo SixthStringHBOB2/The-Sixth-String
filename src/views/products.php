@@ -1,7 +1,8 @@
 <?php
 include '../database/db.php';
 
-function debug_to_console($data) {
+function debug_to_console($data)
+{
     $output = $data;
     if (is_array($output))
         $output = implode(',', $output);
@@ -11,18 +12,18 @@ function debug_to_console($data) {
 
 // URL Params
 $selectedBrands = isset($_GET['brands']) ? explode(',', $_GET['brands']) : [];
-$selectedBrands = array_map(function($brands) {
-    return (int) ltrim($brands, 'b');
+$selectedBrands = array_map(function ($brands) {
+    return (int)ltrim($brands, 'b');
 }, $selectedBrands);
 
 $selectedCategories = isset($_GET['categories']) ? explode(',', $_GET['categories']) : [];
-$selectedCategories = array_map(function($category) {
-    return (int) ltrim($category, 'c');
+$selectedCategories = array_map(function ($category) {
+    return (int)ltrim($category, 'c');
 }, $selectedCategories);
 
 $selectedStates = isset($_GET['states']) ? explode(',', $_GET['states']) : [];
-$selectedStates = array_map(function($states) {
-    return (int) ltrim($states, 's');
+$selectedStates = array_map(function ($states) {
+    return (int)ltrim($states, 's');
 }, $selectedStates);
 // If there are multiple states, set $state to null, otherwise create a list of states
 if (count($selectedStates) > 1) {
