@@ -1,6 +1,41 @@
 <?php
 include '../database/db.php';
 
+function debug_to_console($data) {
+    $output = $data;
+    if (is_array($output))
+        $output = implode(',', $output);
+
+    echo "<script>console.log('Debug Objects: " . $output . "' );</script>";
+}
+
+// URL Params
+$selectedBrands = isset($_GET['brands']) ? explode(',', $_GET['brands']) : [];
+$selectedBrands = array_map(function($brands) {
+    return (int) ltrim($brands, 'b');
+}, $selectedBrands);
+
+$selectedCategories = isset($_GET['categories']) ? explode(',', $_GET['categories']) : [];
+$selectedCategories = array_map(function($category) {
+    return (int) ltrim($category, 'c');
+}, $selectedCategories);
+
+$selectedStates = isset($_GET['states']) ? explode(',', $_GET['states']) : [];
+$selectedStates = array_map(function($states) {
+    return (int) ltrim($states, 's');
+}, $selectedStates);
+// If there are multiple states, set $state to null, otherwise create a list of states
+if (count($selectedStates) > 1) {
+    $state = null;
+} else {
+    $state = implode(',', array_map('intval', $selectedStates));
+}
+
+$minPrice = isset($_GET['minPrice']) ? (float)$_GET['minPrice'] : 0;
+$maxPrice = isset($_GET['maxPrice']) ? (float)$_GET['maxPrice'] : 10000;
+// TODO: reviews
+
+// Pagination
 $items_per_page = 25;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $items_per_page;
@@ -9,13 +44,39 @@ try {
     // Establish connection
     $mysqli = getDbConnection();
 
-    // Get products
+// Get products
     $productsSQL = "SELECT item.id_item, item.name, item.price, item.description, 
-        COALESCE(AVG(review.rating), 0) AS avg_rating 
-        FROM item 
-        LEFT JOIN review ON item.id_item = review.id_item 
-        GROUP BY item.id_item 
-        LIMIT $items_per_page OFFSET $offset";
+                COALESCE(AVG(review.rating), 0) AS avg_rating 
+                FROM item 
+                LEFT JOIN review ON item.id_item = review.id_item
+                WHERE 1=1";
+
+    if (!empty($selectedCategories)) {
+        $categoriesList = implode(',', array_map('intval', $selectedCategories));
+        $productsSQL .= " AND item.id_category IN ($categoriesList)";
+    }
+
+    if (!empty($selectedBrands)) {
+        $brandsList = implode(',', array_map('intval', $selectedBrands));
+        $productsSQL .= " AND item.id_brand IN ($brandsList)";
+    }
+
+    if (!empty($state)) {
+        $productsSQL .= " AND item.is_used = $state";
+    }
+
+    if (!empty($minPrice)) {
+        $productsSQL .= " AND item.price > ($minPrice)";
+    }
+
+    if (!empty($maxPrice)) {
+        $productsSQL .= " AND item.price < ($maxPrice)";
+    }
+
+    $productsSQL .= " GROUP BY item.id_item 
+                  LIMIT $items_per_page OFFSET $offset";
+
+
     $products = $mysqli->query($productsSQL);
 
     $total_result = $mysqli->query("SELECT COUNT(*) AS total FROM item");
@@ -225,19 +286,13 @@ try {
                 <div class="flex items-center">
                     <input type="checkbox" id="new"
                            class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]"
-                           data-filter="states" data-id="new">
+                           data-filter="states" data-id="s0">
                     <label for="new" class="ml-2 text-sm text-gray-700">Nieuw</label>
-                </div>
-                <div class="flex items-center">
-                    <input type="checkbox" id="demo"
-                           class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]"
-                           data-filter="states" data-id="demo">
-                    <label for="demo" class="ml-2 text-sm text-gray-700">Demo</label>
                 </div>
                 <div class="flex items-center">
                     <input type="checkbox" id="secondhand"
                            class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]"
-                           data-filter="states" data-id="secondhand">
+                           data-filter="states" data-id="s1">
                     <label for="secondhand" class="ml-2 text-sm text-gray-700">Tweedehands</label>
                 </div>
             </div>
@@ -277,6 +332,7 @@ try {
                 <label for="review1" class="ml-2 text-sm text-gray-700">1+ sterren</label>
             </div>
         </div>
+        <button id="clearFilters">Clear Filters</button>
 
         <button class="mt-4 w-full py-2 px-4 bg-[#546E7A] text-white rounded-lg hover:bg-[#4A5E66] focus:outline-none focus:ring-2 focus:ring-[#546E7A] focus:ring-opacity-50"
                 id="applyFilters">
@@ -388,6 +444,7 @@ try {
 
         document.getElementById('applyFilters').addEventListener('click', function () {
             updateURLWithFilters();
+            location.reload();
         });
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -435,6 +492,30 @@ try {
             //         if (radio) radio.checked = true;
             //     });
             // }
+
+            // Clear filters
+            function clearFilters() {
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.delete('brands');
+                urlParams.delete('categories');
+                urlParams.delete('minPrice');
+                urlParams.delete('maxPrice');
+                urlParams.delete('states');
+                urlParams.delete('reviews');
+
+                window.history.pushState({}, '', '?' + urlParams.toString());
+
+                // Reset the filter UI
+                document.querySelectorAll('[data-filter]').forEach(element => {
+                    element.checked = false;
+                });
+                document.getElementById('minPrice').value = '';
+                document.getElementById('maxPrice').value = '';
+                location.reload();
+            }
+
+            document.getElementById('clearFilters').addEventListener('click', clearFilters);
+
         });
 
     </script>
