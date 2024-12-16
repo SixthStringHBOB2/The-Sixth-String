@@ -14,7 +14,6 @@
         <ul>
             <li><a href="/account">Profiel</a></li>
             <li><a href="/orders">Bestellingen</a></li>
-            <li><a href="/settings">Instellingen</a></li>
             <li><a href="/logout">Uitloggen</a></li>
         </ul>
     </div>
