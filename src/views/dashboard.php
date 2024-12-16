@@ -8,19 +8,14 @@
 </head>
 <body>
 <?php
-// Database credentials, very secure lol
-$host = "192.168.1.11";
-$dbname = "thesixthstring";
-$username = "default";
-$password = "rEN28Sd8?W|L6FquVky>";
+// Database credentials
+include '../database/db.php';
 
 try {
-    // Database connection
-    $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
-    $pdo = new PDO($dsn, $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Establish connection
+    $mysqli = getDbConnection();
 
-    // Conversion ratio query, never touching it again
+    // Conversion ratio query
     $conversionRatio = <<<SQL
 WITH daily_counts AS (
     SELECT
@@ -71,18 +66,11 @@ ORDER BY
 SQL;
 
     // Execute the query
-    $result = $pdo->query($conversionRatio);
+    $conversion = $mysqli->query($conversionRatio);
 
-    // Fetch data
-    if ($result->rowCount() > 0) {
-        $data = $result->fetchAll(PDO::FETCH_ASSOC);
-    } else {
-        $data = [];
-    }
-
-    // Catch exception
 } catch (PDOException $e) {
-    echo "<tr><td colspan='3'>Connection failed: " . htmlspecialchars($e->getMessage()) . "</td></tr>";
+    echo "Error: " . $e->getMessage();
+    exit();
 }
 ?>
 
@@ -97,8 +85,8 @@ SQL;
 
     <dl class="mt-6 grid grid-cols-1 gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-4">
         <!--        Creates a div per data point-->
-        <?php if (count($data) > 0): ?>
-            <?php foreach ($data as $row): ?>
+        <?php if (isset($conversion)): ?>
+            <?php foreach ($conversion as $row): ?>
                 <div class="flex flex-col rounded-lg border border-gray-100 px-4 py-8 text-center">
                     <dt class="order-last text-lg font-medium text-gray-500">
                         Date: <?php echo htmlspecialchars($row['log_date']); ?></dt>
