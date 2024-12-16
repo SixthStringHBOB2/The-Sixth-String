@@ -52,6 +52,9 @@ $router->post('/shoppingcart', function () {
     include 'views/shoppingcart.php';
 });
 
+$router->get('/dashboard', function () {
+    include 'views/dashboard.php';
+});
 
 $router->get('/purchase', function () {
     include 'views/purchase.php';
