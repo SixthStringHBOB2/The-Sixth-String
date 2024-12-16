@@ -225,19 +225,19 @@ try {
                 <div class="flex items-center">
                     <input type="checkbox" id="new"
                            class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]"
-                           data-filter="state" data-value="new">
+                           data-filter="states" data-id="new">
                     <label for="new" class="ml-2 text-sm text-gray-700">Nieuw</label>
                 </div>
                 <div class="flex items-center">
                     <input type="checkbox" id="demo"
                            class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]"
-                           data-filter="state" data-value="demo">
+                           data-filter="states" data-id="demo">
                     <label for="demo" class="ml-2 text-sm text-gray-700">Demo</label>
                 </div>
                 <div class="flex items-center">
                     <input type="checkbox" id="secondhand"
                            class="h-4 w-4 text-[#546E7A] border-gray-300 rounded focus:ring-[#546E7A]"
-                           data-filter="state" data-value="secondhand">
+                           data-filter="states" data-id="secondhand">
                     <label for="secondhand" class="ml-2 text-sm text-gray-700">Tweedehands</label>
                 </div>
             </div>
@@ -249,31 +249,31 @@ try {
             <div class="flex items-center">
                 <input type="radio" id="review5" name="review"
                        class="h-4 w-4 text-[#546E7A] border-gray-300 focus:ring-[#546E7A]" data-filter="review"
-                       data-value="5">
+                       data-id="5">
                 <label for="review5" class="ml-2 text-sm text-gray-700">5 sterren</label>
             </div>
             <div class="flex items-center">
                 <input type="radio" id="review4" name="review"
                        class="h-4 w-4 text-[#546E7A] border-gray-300 focus:ring-[#546E7A]" data-filter="review"
-                       data-value="4">
+                       data-id="4">
                 <label for="review4" class="ml-2 text-sm text-gray-700">4+ sterren</label>
             </div>
             <div class="flex items-center">
                 <input type="radio" id="review3" name="review"
                        class="h-4 w-4 text-[#546E7A] border-gray-300 focus:ring-[#546E7A]" data-filter="review"
-                       data-value="3">
+                       data-id="3">
                 <label for="review3" class="ml-2 text-sm text-gray-700">3+ sterren</label>
             </div>
             <div class="flex items-center">
                 <input type="radio" id="review2" name="review"
                        class="h-4 w-4 text-[#546E7A] border-gray-300 focus:ring-[#546E7A]" data-filter="review"
-                       data-value="2">
+                       data-id="2">
                 <label for="review2" class="ml-2 text-sm text-gray-700">2+ sterren</label>
             </div>
             <div class="flex items-center">
                 <input type="radio" id="review1" name="review"
                        class="h-4 w-4 text-[#546E7A] border-gray-300 focus:ring-[#546E7A]" data-filter="review"
-                       data-value="1">
+                       data-id="1">
                 <label for="review1" class="ml-2 text-sm text-gray-700">1+ sterren</label>
             </div>
         </div>
@@ -322,8 +322,7 @@ try {
             loadCategoryFilters();
         });
 
-        document.getElementById('applyFilters').addEventListener('click', function () {
-            // Collect data
+        function getSelectedFilters() {
             const selectedFilters = {
                 brands: [],
                 categories: [],
@@ -334,30 +333,104 @@ try {
             };
 
             // Get selected brands
-            document.querySelectorAll('input[data-filter="brand"]:checked').forEach(function (input) {
-                selectedFilters.brands.push(input.getAttribute('data-id'));
+            const brandCheckboxes = document.querySelectorAll('[data-filter="brand"]:checked');
+            brandCheckboxes.forEach(checkbox => {
+                selectedFilters.brands.push(checkbox.getAttribute('data-id'));
             });
 
             // Get selected categories
-            document.querySelectorAll('input[data-filter="category"]:checked').forEach(function (input) {
-                selectedFilters.categories.push(input.getAttribute('data-id'));
+            const categoryCheckboxes = document.querySelectorAll('[data-filter="category"]:checked');
+            categoryCheckboxes.forEach(checkbox => {
+                selectedFilters.categories.push(checkbox.getAttribute('data-id'));
             });
 
             // Get selected states
-            document.querySelectorAll('input[data-filter="state"]:checked').forEach(function (input) {
-                selectedFilters.states.push(input.getAttribute('data-value'));
+            const statesCheckboxes = document.querySelectorAll('[data-filter="states"]:checked');
+            statesCheckboxes.forEach(checkbox => {
+                selectedFilters.states.push(checkbox.getAttribute('data-id'));
             });
 
-            // Get selected review
-            document.querySelectorAll('input[data-filter="review"]:checked').forEach(function (input) {
-                selectedFilters.review = input.getAttribute('data-value');
-            });
+            // // Get selected reviews
+            // const reviewRadios = document.querySelectorAll('[data-filter="review"]:checked');
+            // reviewRadios.forEach(radio => {
+            //     selectedFilters.review.push(radio.getAttribute('data-id'));
+            // });
 
-            console.log(selectedFilters);
+            return selectedFilters;
+        }
+
+        function updateURLWithFilters() {
+            const selectedFilters = getSelectedFilters();
+
+            const params = new URLSearchParams();
+
+            if (selectedFilters.brands.length > 0) {
+                params.set('brands', selectedFilters.brands.join(','));
+            }
+
+            if (selectedFilters.categories.length > 0) {
+                params.set('categories', selectedFilters.categories.join(','));
+            }
+
+            if (selectedFilters.states.length > 0) {
+                params.set('states', selectedFilters.states.join(','));
+            }
+
+            params.set('minPrice', selectedFilters.minPrice);
+            params.set('maxPrice', selectedFilters.maxPrice);
+
+            // if (selectedFilters.review.length > 0) {
+            //     params.set('reviews', selectedFilters.review.join(','));
+            // }
+
+            window.history.pushState({}, '', '?' + params.toString());
+        }
+
+        document.getElementById('applyFilters').addEventListener('click', function () {
+        updateURLWithFilters();
         });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get the query parameters
+            const urlParams = new URLSearchParams(window.location.search);
+
+            // Apply brand filters
+            const brands = urlParams.get('brands');
+            if (brands) {
+                brands.split(',').forEach(brandId => {
+                    const checkbox = document.querySelector(`[data-id="${brandId}"]`);
+                    checkbox.checked = true;
+                });
+            }
+
+            // Apply category filters
+            const categories = urlParams.get('categories');
+            if (categories) {
+                categories.split(',').forEach(categoryId => {
+                    const checkbox = document.querySelector(`[data-id="${categoryId}"]`);
+                    checkbox.checked = true;
+                });
+            }
+
+            // Apply price filters
+            const minPrice = urlParams.get('minPrice');
+            const maxPrice = urlParams.get('maxPrice');
+            if (minPrice) document.getElementById('minPrice').value = minPrice;
+            if (maxPrice) document.getElementById('maxPrice').value = maxPrice;
+
+            // // Apply review filters
+            // const reviews = urlParams.get('reviews');
+            // if (reviews) {
+            //     reviews.split(',').forEach(rating => {
+            //         const radio = document.querySelector(`[data-value="${rating}"]`);
+            //         if (radio) radio.checked = true;
+            //     });
+            // }
+        });
+
     </script>
 
-<div class="products">
+    <div class="products">
         <div class="product-grid">
             <?php while ($product = $products->fetch_assoc()): ?>
                 <div class="product">
