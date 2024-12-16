@@ -1,5 +1,6 @@
 <?php
 include '../database/db.php';
+session_start();
 
 $items_per_page = 25;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -35,6 +36,9 @@ try {
     echo "Error: " . $e->getMessage();
     exit();
 }
+
+// Get saved filters from session
+$savedFilters = isset($_SESSION['filters']) ? $_SESSION['filters'] : [];
 ?>
 
 <!DOCTYPE html>
@@ -305,8 +309,8 @@ try {
     </div>
 
     <script>
-        // Gathering selected filter options
         document.getElementById('applyFilters').addEventListener('click', function () {
+            // Collect data
             const selectedFilters = {
                 brands: [],
                 categories: [],
@@ -336,7 +340,21 @@ try {
                 selectedFilters.review = input.getAttribute('data-value');
             });
 
-            console.log('Selected Filters:', selectedFilters);
+            // Send data to the server
+            fetch('../public/save_filters.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(selectedFilters)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Filters saved:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
         });
     </script>
 
