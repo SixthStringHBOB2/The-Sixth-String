@@ -1,0 +1,90 @@
+
+body {
+    background-color: #D9D9D9;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 25px;
+    width: 33%;
+    min-width: 300px;
+    max-width: 600px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    text-align: center;
+    margin: 0;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+    border-color: #C7914E;
+    outline: none;
+}
+
+button {
+    background: linear-gradient(to right, #C7914E, #61584D);
+    color: white;
+    padding: 5px;
+    width: 100%;
+    border: none;
+    border-radius: 15px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background: linear-gradient(to right, #61584D, #C7914E);
+}
+
+button:focus {
+    outline: none;
+}
+
+@media screen and (max-width: 768px) {
+    form {
+        width: 50%;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    form {
+        width: 80%;
+    }
+}
+
+a {
+    color: #61584D;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
