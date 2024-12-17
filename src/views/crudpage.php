@@ -8,7 +8,6 @@ $dbconnection = getDbConnection();
 $sqlGetAllItems = "SELECT * FROM item i WHERE i.isActive = 1 OR i.isActive IS NULL";
 $result = mysqli_query($dbconnection, $sqlGetAllItems);
 mysqli_close($dbconnection);
-//$allItems = mysqli_fetch_assoc($result);
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
     if(isset($_POST['id_item'])){
@@ -27,6 +26,61 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
 function createItem(){
     $dbconnection = getDbConnection();
+
+    $name = $_POST['name'];
+    $colour = $_POST['colour'];
+    $price = $_POST['price'];
+    $weight = $_POST['weight'];
+    $size = $_POST['size'];
+    $amount_frets = $_POST['amount_frets'];
+    $amount_strings = $_POST['amount_strings'];
+    $consumption = $_POST['consumption'];
+    $built_in_effects = $_POST['built_in_effects'];
+    $description = $_POST['description'];
+    $discount = $_POST['discount'];
+    $is_used = $_POST['is_used'];
+    $used_damage = $_POST['used_damage'];
+    $used_age = $_POST['used_age'];
+    $id_category = $_POST['id_category'];
+    $id_brand = $_POST['id_brand'];
+    $isActive = 1; // default is always visible
+
+    // force correct format
+    if (strtotime($used_age)) {
+        $used_age = date('Y-m-d', strtotime($used_age));
+    } else {
+        die("Invalid date format for used_age!");
+    }
+
+    $sqlCreateItem = "INSERT INTO item
+        (`name`, `colour`, `price`, `weight`, `size`, `amount_frets`, `amount_strings`, `consumption`, 
+        `built_in_effects`, `description`, `discount`, `is_used`, `used_damage`, `used_age`, `id_category`, `id_brand`, `isActive`)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    $stmt = mysqli_prepare($dbconnection, $sqlCreateItem);
+
+    mysqli_stmt_bind_param($stmt, 'ssddiiddiissisiii',
+        $name, $colour, $price, $weight, $size, $amount_frets, $amount_strings, $consumption,
+        $built_in_effects, $description, $discount, $is_used, $used_damage, $used_age, $id_category, $id_brand, $isActive);
+
+    mysqli_stmt_execute($stmt);
+
+    mysqli_stmt_close($stmt);
+    mysqli_close($dbconnection);
+}
+
+function deleteItem($id_item) {
+    $dbconnection = getDbConnection();
+    $sqlDeleteItem = "UPDATE item i SET i.isActive = 0 WHERE i.id_item = $id_item";
+    mysqli_query($dbconnection, $sqlDeleteItem);
+    mysqli_close($dbconnection);
+}
+
+function updateDatabase($id_item) {
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+    $dbconnection = getDbConnection();
+
+    // Retrieve user input from the form
     $name = $_POST['name'];
     $colour = $_POST['colour'];
     $price = $_POST['price'];
@@ -44,47 +98,45 @@ function createItem(){
     $id_category = $_POST['id_category'];
     $id_brand = $_POST['id_brand'];
 
-    // Prepare the SQL query to insert data
-    $sqlCreateItem = "INSERT INTO item
-    (`name`, colour, price, weight, size, amount_frets, amount_strings, consumption, built_in_effects, `description`, discount, is_used, used_damage, used_age, id_category, id_brand)
-    VALUES
-    ('$name', '$colour', $price, $weight, $size, $amount_frets, $amount_strings, $consumption, '$built_in_effects', '$description', '$discount', '$is_used', '$used_damage', '$used_age', $id_category, $id_brand);";
+    // force correct format
+    if (strtotime($used_age)) {
+        $used_age = date('Y-m-d', strtotime($used_age));
+    } else {
+        die("Invalid date format for used_age!");
+    }
 
-     mysqli_query($dbconnection, $sqlCreateItem);
-     mysqli_close($dbconnection);
-}
-
-function deleteItem($id_item) {
-    $dbconnection = getDbConnection();
-    $sqlDeleteItem = "UPDATE item i SET i.isActive = 0 WHERE i.id_item = $id_item";
-    mysqli_query($dbconnection, $sqlDeleteItem);
-    mysqli_close($dbconnection);
-}
-
-function updateDatabase($id_item){
-    $dbconnection = getDbConnection();
     $sqlUpdateItem = "UPDATE item SET
-        `name` = '" . $_POST['name'] . "',
-        colour = '" . $_POST['colour'] . "',
-        price = '" . $_POST['price'] . "',
-        weight = '" . $_POST['weight'] . "',
-        size = '" . $_POST['size'] . "',
-        amount_frets = '" . $_POST['amount_frets'] . "',
-        amount_strings = '" . $_POST['amount_strings'] . "',
-        consumption = '" . $_POST['consumption'] . "',
-        built_in_effects = '" . $_POST['built_in_effects'] . "',
-        description = '" . $_POST['description'] . "',
-        discount = '" . $_POST['discount'] . "',
-        is_used = '" . $_POST['is_used'] . "',
-        used_damage = '" . $_POST['used_damage'] . "',
-        used_age = '" . $_POST['used_age'] . "',
-        id_category = '" . $_POST['id_category'] . "',
-        id_brand = '" . $_POST['id_brand'] . "'
-    WHERE id_item = $id_item";
+        `name` = ?,
+        colour = ?,
+        price = ?,
+        weight = ?,
+        size = ?,
+        amount_frets = ?,
+        amount_strings = ?,
+        consumption = ?,
+        built_in_effects = ?,
+        description = ?,
+        discount = ?,
+        is_used = ?,
+        used_damage = ?,
+        used_age = ?,
+        id_category = ?,
+        id_brand = ?
+        WHERE id_item = ?";
 
-    mysqli_query($dbconnection, $sqlUpdateItem);
+    $stmt = mysqli_prepare($dbconnection, $sqlUpdateItem);
+
+    mysqli_stmt_bind_param($stmt, 'ssddiiddiissisiii',
+        $name, $colour, $price, $weight, $size, $amount_frets, $amount_strings, $consumption,
+        $built_in_effects, $description, $discount, $is_used, $used_damage, $used_age, $id_category, $id_brand, $id_item
+    );
+
+    mysqli_stmt_execute($stmt);
+
+    mysqli_stmt_close($stmt);
     mysqli_close($dbconnection);
 }
+
 ?>
 
 <html>
@@ -163,7 +215,7 @@ function updateDatabase($id_item){
                     <td><input type='text' name='discount' value='" . $item['discount'] . "' style='width: 80px;' required></td>
                     <td><input type='text' name='is_used' value='" . $item['is_used'] . "' style='width: 80px;' required></td>
                     <td><input type='text' name='used_damage' value='" . $item['used_damage'] . "' style='width: 80px;' required></td>
-                    <td><input type='text' name='used_age' value='" . $item['used_age'] . "' style='width: 80px;' required></td>
+                    <td><input type='date' name='used_age' value='" . $item['used_age'] . "' style='width: 80px;' required></td>
                     <td><input type='text' name='id_category' value='" . $item['id_category'] . "' style='width: 80px;' required></td>
                     <td><input type='text' name='id_brand' value='" . $item['id_brand'] . "' style='width: 80px;' required></td>
                     <td>
