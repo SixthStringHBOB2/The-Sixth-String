@@ -10,11 +10,14 @@ $shoppingCartId = ""; // is set later in the first function, might seem abit wei
 
 // dummy products, this is how we expect it to be stored in the session. Everything should be a variable so id1 and product 1 are varibale. The number at the end is how much the customer wants
 // this is only there so people have an example of how we expect it to be stored, if you uncomment below it makes the site buggy af lol
+$_SESSION['shoppingCart'] = [];
+
 //$_SESSION['shoppingCart'] = [
-//    1 => [1, "product 1", "15,50", 1],
-//    2 => [2, "product 2", "15,50", 1],
-//    3 => [3, "product 3", "15,50", 1],
+//    2 => [2, "product 1", "15,50", 1],
+//    3 => [3, "product 2", "15,50", 1],
+//    4 => [4, "product 3", "15,50", 1],
 //];
+
 
 if(isset($_SESSION['LoggedInUser'])){
     $dbConnection = getDbConnection();
@@ -27,10 +30,11 @@ if(isset($_SESSION['LoggedInUser'])){
 
     $queryResult = mysqli_query($dbConnection, $query);
 
+
     if (!$queryResult) {
         die("Query failed: " . mysqli_error($dbConnection));
     }
-    if($queryResult->num_rows >= 1){
+    if($queryResult->num_rows > 1){
         while ($row = mysqli_fetch_assoc($queryResult)) {
             $itemId = $row['id_item'];
             $itemName = $row['name'];
@@ -38,6 +42,7 @@ if(isset($_SESSION['LoggedInUser'])){
             $itemAmount = $row['amount'];
 
             $shoppingCartId = $row['id_shopping_cart'];
+
             // Add the item to the shopping cart session
             if(!isset($_SESSION['shoppingCart'][$itemId])){
                 $_SESSION['shoppingCart'][$itemId] = [
@@ -51,6 +56,12 @@ if(isset($_SESSION['LoggedInUser'])){
                 $_SESSION['shoppingCart'][$itemId][3] + $itemAmount;
             }
         }
+    } else{
+        $sql = "SELECT id_shopping_cart FROM shopping_cart WHERE id_user = $userId";
+        $result = mysqli_query($dbConnection, $sql);
+        $shoppingCartId = ($row = mysqli_fetch_assoc($result)) ? $row['id_shopping_cart'] : null;
+        mysqli_close($dbConnection);
+
     }
 }
 
@@ -65,19 +76,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (isset($_SESSION['shoppingCart'][$productId])) {
                     if ($amount > 0) {
                         $_SESSION['shoppingCart'][$productId][3] = $amount;
-                        if(isset($_SESSION['LoggedInUser'])){
-                            $sqlcheckIfItemInDbExsist = "SELECT sci.id_item
+                        if (isset($_SESSION['LoggedInUser'])) {
+                            $sqlcheckIfItemInDbShoppingCartExsist = "SELECT sci.id_item
                                                         FROM shopping_cart_item sci
                                                         LEFT JOIN shopping_cart sc ON sci.id_shopping_cart = sc.id_shopping_cart
                                                         WHERE sc.id_user = $userId";
 
-                            $checkIfItemInDbExsist = mysqli_query($dbConnection, $sqlcheckIfItemInDbExsist);
+                            $checkIfItemInDbExsist = mysqli_query($dbConnection, $sqlcheckIfItemInDbShoppingCartExsist);
 
-                            if ($checkIfItemInDbExsist && !mysqli_num_rows($checkIfItemInDbExsist) >= 1) {
-                                while ($row = mysqli_fetch_assoc($checkIfItemInDbExsist)) {
-                                    $productId = $row['id_item'];
+                            if ($checkIfItemInDbExsist->num_rows <= 1) {
+                                foreach ($_SESSION['shoppingCart'] as $product) {
+                                    $productId = $product[0];
+                                    $amount = $product[3];
                                     $sqlInsert = "INSERT INTO shopping_cart_item (id_shopping_cart, id_item, amount)
-                                                VALUES ($shoppingCartId, $productId, $amount)";
+                                                        VALUES ($shoppingCartId, $productId, $amount)";
 
                                     mysqli_query($dbConnection, $sqlInsert);
                                 }
@@ -108,28 +120,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             // update the database
             if (isset($_POST['PurchaseButton2'])) {
-                    //create order
-                    $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status, id_user) VALUES ('$current_datetime', 1, $userId)"; // the status is set to 1 for now, this is the happy flow
-                    mysqli_query($dbConnection, $sqlCreateOrder);
+                //create order
+                $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status, id_user) VALUES ('$current_datetime', 1, 1)"; // the status is set to 1 for now, this is the happy flow
+                mysqli_query($dbConnection, $sqlCreateOrder);
 
-                    //get created order id
-                    $lastInsertedId = mysqli_insert_id($dbConnection);
-                    createOrderDetail($lastInsertedId);
+                //get created order id
+                $lastInsertedId = mysqli_insert_id($dbConnection);
+                createOrderDetail($lastInsertedId);
 
-                    //TODO clear shopping_cart_item createOrderDetail($lastInsertedId) is done;
-                }
             }
-            //TODO once db has been updated turn this on
-//            $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status) VALUES ('$current_datetime', 1)"; // the status is set to 1 for now, this is the happy flow
-//            mysqli_query($dbConnection, $sqlCreateOrder);
-//
-//            //get created order id
-//             $lastInsertedId = mysqli_insert_id($dbConnection);
-//            createOrderDetail($lastInsertedId);
+            $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status, id_user) VALUES ('$current_datetime', 1, 1)"; // the status is set to 1 for now, this is the happy flow
+            // the id_user is set to 1, de database always expect a user so id_user is now a geust user for people without an account
+            mysqli_query($dbConnection, $sqlCreateOrder);
 
+            //get created order id
+            $lastInsertedId = mysqli_insert_id($dbConnection);
             mysqli_close($dbConnection);
+            createOrderDetail($lastInsertedId);
+            // clear the shopping_cart_item table after purchase is done
+            clearShoppingCart();
+
         }
     }
+}
+
+function clearShoppingCart(){
+    if($_SESSION['LoggedInUser']){
+        $userId = $_SESSION['LoggedInUser'];
+        $dbconnection = getDbConnection();
+
+        $sqlDeleteItems = "DELETE sci
+                       FROM shopping_cart_item sci
+                       LEFT JOIN shopping_cart sc ON sc.id_shopping_cart = sci.id_shopping_cart
+                       WHERE sc.id_user = $userId";
+
+
+        mysqli_query($dbconnection, $sqlDeleteItems);
+        mysqli_close($dbconnection);
+    } else{
+        unset($_SESSION['shoppingCart']);
+        echo "done";
+    }
+}
 
 function createOrderDetail($lastInsertedId){
     $dbConnection = getDbConnection();
