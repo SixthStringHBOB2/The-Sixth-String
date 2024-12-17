@@ -5,7 +5,7 @@ ini_set('display_errors', 1);
 include 'database/db.php';
 
 $dbconnection = getDbConnection();
-$sqlGetAllItems = "SELECT * FROM item"; //TODO add where statement to check visability
+$sqlGetAllItems = "SELECT * FROM item i WHERE i.isActive = 1 OR i.isActive IS NULL";
 $result = mysqli_query($dbconnection, $sqlGetAllItems);
 mysqli_close($dbconnection);
 //$allItems = mysqli_fetch_assoc($result);
@@ -55,11 +55,10 @@ function createItem(){
 }
 
 function deleteItem($id_item) {
-    //TODO query below needs to be executed in that order before an item can be deleted. An order is not something we should be deleting.... How can we fix that. Perhaps an extra table called item_old.
-    //DELETE FROM order_detail WHERE id_item = 1;
-    //DELETE FROM review WHERE id_item = 1;
-    //DELETE FROM shopping_cart_item WHERE id_item = 1;
-    //DELETE FROM item WHERE id_item = 1;
+    $dbconnection = getDbConnection();
+    $sqlDeleteItem = "UPDATE item i SET i.isActive = 0 WHERE i.id_item = $id_item";
+    mysqli_query($dbconnection, $sqlDeleteItem);
+    mysqli_close($dbconnection);
 }
 
 function updateDatabase($id_item){
