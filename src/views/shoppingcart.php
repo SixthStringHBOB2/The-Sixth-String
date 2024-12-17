@@ -12,12 +12,11 @@ $shoppingCartId = ""; // is set later in the first function, might seem abit wei
 // this is only there so people have an example of how we expect it to be stored, if you uncomment below it makes the site buggy af lol
 $_SESSION['shoppingCart'] = [];
 
-//$_SESSION['shoppingCart'] = [
-//    2 => [2, "product 1", "15,50", 1],
-//    3 => [3, "product 2", "15,50", 1],
-//    4 => [4, "product 3", "15,50", 1],
-//];
-
+$_SESSION['shoppingCart'] = [
+    2 => [2, "product 1", "15,50", 1],
+    3 => [3, "product 2", "15,50", 1],
+    4 => [4, "product 3", "15,50", 1],
+];
 
 if(isset($_SESSION['LoggedInUser'])){
     $dbConnection = getDbConnection();
@@ -85,13 +84,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $checkIfItemInDbExsist = mysqli_query($dbConnection, $sqlcheckIfItemInDbShoppingCartExsist);
 
                             if ($checkIfItemInDbExsist->num_rows <= 1) {
-                                foreach ($_SESSION['shoppingCart'] as $product) {
+                                while ($product = current($_SESSION['shoppingCart'])) {
                                     $productId = $product[0];
                                     $amount = $product[3];
-                                    $sqlInsert = "INSERT INTO shopping_cart_item (id_shopping_cart, id_item, amount)
-                                                        VALUES ($shoppingCartId, $productId, $amount)";
+                                    echo $amount;
+                                    echo "<br>";
 
+                                    // Insert into shopping_cart_item
+                                    $sqlInsert = "INSERT INTO shopping_cart_item (id_shopping_cart, id_item, amount)
+                                    VALUES ($shoppingCartId, $productId, $amount)";
+                                    echo $shoppingCartId;
                                     mysqli_query($dbConnection, $sqlInsert);
+
+                                    // Move to the next item in the array
+                                    next($_SESSION['shoppingCart']);
                                 }
                             }
                             $sqlUpdateShoppingCartItemAmount = "UPDATE shopping_cart_item
@@ -118,31 +124,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             }
-            // update the database
-            if (isset($_POST['PurchaseButton2'])) {
-                //create order
-                $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status, id_user) VALUES ('$current_datetime', 1, 1)"; // the status is set to 1 for now, this is the happy flow
-                mysqli_query($dbConnection, $sqlCreateOrder);
-
-                //get created order id
-                $lastInsertedId = mysqli_insert_id($dbConnection);
-                createOrderDetail($lastInsertedId);
-
-            }
-            $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status, id_user) VALUES ('$current_datetime', 1, 1)"; // the status is set to 1 for now, this is the happy flow
-            // the id_user is set to 1, de database always expect a user so id_user is now a geust user for people without an account
-            mysqli_query($dbConnection, $sqlCreateOrder);
-
-            //get created order id
-            $lastInsertedId = mysqli_insert_id($dbConnection);
-            mysqli_close($dbConnection);
-            createOrderDetail($lastInsertedId);
-            // clear the shopping_cart_item table after purchase is done
-            clearShoppingCart();
-
         }
     }
 }
+// update the database
+if (isset($_POST['PurchaseButton2'])) {
+    $dbConnection = getDbConnection();
+    if (isset($_SESSION['LoggedInUser'])) {
+        //create order
+        $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status, id_user) VALUES ('$current_datetime', 1, $userId)"; // the status is set to 1 for now, this is the happy flow
+        mysqli_query($dbConnection, $sqlCreateOrder);
+
+        //get created order id
+        $lastInsertedId = mysqli_insert_id($dbConnection);
+        createOrderDetail($lastInsertedId);
+    }else{
+        $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status, id_user) VALUES ('$current_datetime', 1, 1)"; // the status is set to 1 for now, this is the happy flow
+        // the id_user is set to 1, de database always expect a user so id_user is now a geust user for people without an account
+        mysqli_query($dbConnection, $sqlCreateOrder);
+
+        //get created order id
+        $lastInsertedId = mysqli_insert_id($dbConnection);
+        createOrderDetail($lastInsertedId);
+        // clear the shopping_cart_item table after purchase is done
+    }
+    clearShoppingCart();
+    mysqli_close($dbConnection);
+}
+
 
 function clearShoppingCart(){
     if($_SESSION['LoggedInUser']){
@@ -255,6 +264,8 @@ function createOrderDetail($lastInsertedId){
         </table>
         <br>
         <input type="hidden" name="formType" value="purchaseCart">
+    </form>
+    <form method="POST" action="/shoppingcart">
         <input type="submit" name="PurchaseButton2" value="Koop winkelwagen">
     </form>
 </body>
