@@ -1,10 +1,5 @@
 <?php
 function getDbConnection() {
-//    $host = getenv('MYSQL_HOST');
-//    $dbname = getenv('MYSQL_DATABASE');
-//    $username = getenv('MYSQL_USER');
-//    $password = getenv('MYSQL_PASSWORD');
-
     $host = "192.168.1.11";
     $dbname = "thesixthstring";
     $username = "default";

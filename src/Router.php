@@ -1,30 +1,33 @@
 <?php
+
 class Router
 {
     private $routes = [];
     private $basePath;
+    private $auth;
 
-    public function __construct($basePath = '/')
+    public function __construct($basePath = '/', $auth = null)
     {
         $this->basePath = rtrim($basePath, '/');
+        $this->auth = $auth;
     }
 
-    public function get($path, $callback)
+    public function get($path, $callback, $authRequired = false)
     {
-        $this->addRoute('GET', $path, $callback);
+        $this->addRoute('GET', $path, $callback, $authRequired);
     }
 
-    public function post($path, $callback)
+    public function post($path, $callback, $authRequired = false)
     {
-        $this->addRoute('POST', $path, $callback);
+        $this->addRoute('POST', $path, $callback, $authRequired);
     }
 
-    public function any($path, $callback)
+    public function any($path, $callback, $authRequired = false)
     {
-        $this->addRoute('ANY', $path, $callback);
+        $this->addRoute('ANY', $path, $callback, $authRequired);
     }
 
-    private function addRoute($method, $path, $callback)
+    private function addRoute($method, $path, $callback, $authRequired)
     {
         $pattern = '#^' . preg_replace('/\{(\w+)\}/', '(?P<$1>[^/]+)', $path) . '$#';
         $this->routes[] = [
@@ -32,8 +35,8 @@ class Router
             'pattern' => $pattern,
             'callback' => $callback,
             'path' => $path,
+            'authRequired' => $authRequired, // Flag to indicate if authentication is required
         ];
-        error_log("Debug: Added route: $method $pattern");
     }
 
     public function serveStatic($uri, $filePath)
@@ -42,7 +45,28 @@ class Router
             $assetPath = $filePath . '/public' . str_replace('/assets', '', $uri);
 
             if (file_exists($assetPath)) {
-                header("Content-Type: " . mime_content_type($assetPath));
+                $extension = pathinfo($assetPath, PATHINFO_EXTENSION);
+
+                $mimeTypes = [
+                    'css'  => 'text/css',
+                    'js'   => 'application/javascript',
+                    'jpg'  => 'image/jpeg',
+                    'jpeg' => 'image/jpeg',
+                    'png'  => 'image/png',
+                    'gif'  => 'image/gif',
+                    'svg'  => 'image/svg+xml',
+                    'ico'  => 'image/x-icon',
+                    'woff' => 'font/woff',
+                    'woff2'=> 'font/woff2',
+                    'ttf'  => 'font/ttf',
+                    'eot'  => 'application/vnd.ms-fontobject',
+                    'html' => 'text/html',
+                    'json' => 'application/json',
+                ];
+
+                $mimeType = $mimeTypes[$extension] ?? 'application/octet-stream';
+                header("Content-Type: $mimeType");
+
                 readfile($assetPath);
                 exit;
             } else {
@@ -54,31 +78,29 @@ class Router
         }
     }
 
+
     public function handleRequest()
     {
         $requestUri = strtok($_SERVER['REQUEST_URI'], '?');
         $method = $_SERVER['REQUEST_METHOD'];
 
-        error_log("Debug: Received request for URI: $requestUri with method: $method");
-
         if (strpos($requestUri, $this->basePath) === 0) {
             $requestUri = substr($requestUri, strlen($this->basePath));
         }
-
-        error_log("Debug: Processed URI after base path adjustment: $requestUri");
 
         $this->serveStatic($requestUri, __DIR__);
 
         parse_str(isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '', $queryParams);
 
         foreach ($this->routes as $route) {
-            error_log("Debug: Checking route pattern: {$route['pattern']} against URI: $requestUri");
-
             if (
                 ($route['method'] === 'ANY' || $route['method'] === $method) &&
                 preg_match($route['pattern'], $requestUri, $matches)
             ) {
-                error_log("Debug: Matched route: {$route['path']} with pattern {$route['pattern']}");
+                if ($route['authRequired'] && !$this->auth->isLoggedIn()) {
+                    $this->handleAuthRedirect();
+                    return;
+                }
 
                 $arguments = array_values(array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY));
                 $arguments[] = $queryParams;
@@ -91,5 +113,14 @@ class Router
         http_response_code(404);
         echo "Page not found!";
         error_log("Debug: No matching route for URI: $requestUri");
+    }
+
+    private function handleAuthRedirect()
+    {
+        echo '<script>
+                alert("You must be logged in to access this page.");
+                window.location.href = "/login";
+              </script>';
+        exit;
     }
 }

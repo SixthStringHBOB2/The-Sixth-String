@@ -1,18 +1,50 @@
 <?php
 
 require_once 'Router.php';
+require_once 'services/authService.php';
 
-$router = new Router();
+$auth = new Auth();
+$router = new Router('/', $auth);
 
 $router->get('/', function () {
     include 'views/home.php';
 });
 
+$router->get('/account', function () use ($auth) {
+    $userData = $auth->getLoggedInUserData();
+    $userName = $auth->getLoggedInUserName();
+
+    include 'views/account.php';
+}, true);
+
+$router->any('/logout', function () use ($auth) {
+    $auth->logout();
+}, true);
+
+$router->get('/orders', function () {
+    include 'views/orders.php';
+}, true);
+
+$router->get('/order/{id}', function ($id) {
+    $_GET['id'] = $id;
+    include 'views/order_details.php';
+}, true);
+
+
+$router->any('/login', function () {
+    include 'views/login.php';
+});
+
+$router->any('/register', function () {
+    include 'views/register.php';
+});
+
+
 $router->get('/post/{id}', function ($id, $queryParams) {
     include 'views/home.php';
 });
 
-$router->get('/products', function () {
+$router->get('/products', function ()  {
     include 'views/products.php';
 });
 
@@ -27,6 +59,10 @@ $router->get('/shoppingcart', function () {
 
 $router->post('/shoppingcart', function () {
     include 'views/shoppingcart.php';
+});
+
+$router->get('/dashboard', function () {
+    include 'views/dashboard.php';
 });
 
 $router->get('/purchase', function () {
