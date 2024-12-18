@@ -21,6 +21,15 @@ $router->any('/logout', function () use ($auth) {
     $auth->logout();
 }, true);
 
+$router->get('/orders', function () {
+    include 'views/orders.php';
+}, true);
+
+$router->get('/order/{id}', function ($id) {
+    $_GET['id'] = $id;
+    include 'views/order_details.php';
+}, true);
+
 
 $router->any('/login', function () {
     include 'views/login.php';
