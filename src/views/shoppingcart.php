@@ -370,7 +370,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: #27ae60;
         }
 
-        /* Custom select option with icons */
         select option {
             padding-left: 25px;
             background-size: 20px;
@@ -404,8 +403,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="item-details">
                     <h3><?= htmlspecialchars($item['name']) ?></h3>
                     <p class="description"><?= htmlspecialchars($item['description']) ?></p>
-                    <p class="price">€<?= number_format($item['price'], 2) ?></p>
-                    <p class="price-per-piece">Per stuk: €<?= number_format($item['price'] / $item['amount'], 2) ?></p>
+                    <p class="price">€<?= number_format($item['price'] * $item['amount'], 2) ?></p>
+                    <p class="price-per-piece">Per stuk: €<?= number_format($item['price'], 2) ?></p>
 
                     <form action="" method="POST" class="quantity-controls">
                         <input type="number" name="amount" value="<?= $item['amount'] ?>" min="1">
