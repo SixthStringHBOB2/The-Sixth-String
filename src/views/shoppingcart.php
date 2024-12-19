@@ -195,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .cart-items h1, .sidebar h1 {
-            color: #2c3e50; /* Matching product.php heading color */
+            color: #2c3e50;
             font-size: 24px;
             margin-bottom: 20px;
         }
@@ -228,7 +228,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .cart-item .price {
             font-size: 18px;
             font-weight: bold;
-            color: #27ae60; /* Price green color */
+            color: #000000;
+        }
+
+        .cart-item .price-per-piece {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
         }
 
         .cart-item .description {
@@ -261,6 +267,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .cart-item button:hover {
             background: #2289bc;
+        }
+
+        .cart-item .remove-btn {
+            background-color: red;
+            color: white;
         }
 
         .sidebar {
@@ -305,8 +316,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #2c3e50;
         }
 
-        .cart-items, .sidebar {
-            border-radius: 10px;
+        .sidebar .form-group {
+            margin-bottom: 20px;
+        }
+
+        input, select {
+            background: white;
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .payment-method, .delivery-method {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .payment-method select, .delivery-method select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        .payment-method .payment-icon, .delivery-method .delivery-icon {
+            width: 65px;
+            height: 65px;
+            object-fit: contain;
+        }
+
+        .order-btn {
+            background: #2ecc71;
+            border: none;
+            color: white;
+            padding: 15px;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+        .order-btn:hover {
+            background: #27ae60;
+        }
+
+        /* Custom select option with icons */
+        select option {
+            padding-left: 25px;
+            background-size: 20px;
+            background-repeat: no-repeat;
+            background-position: left center;
+        }
+
+        .delivery-method select option[data-icon="postnl"] {
+            background-image: url('path_to_postnl_icon.png');
+        }
+
+        .delivery-method select option[data-icon="dhl"] {
+            background-image: url('path_to_dhl_icon.png');
         }
 
     </style>
@@ -314,60 +391,104 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 
 <div class="cart-container">
-    <!-- Cart Items -->
     <div class="cart-items">
-        <h1>Winkelmandje</h1>
+        <h1>Winkelwagentje</h1>
 
-        <?php if (empty($shoppingCart)): ?>
-            <p>Uw Winkelmandje is leeg.</p>
-        <?php else: ?>
-            <?php foreach ($shoppingCart as &$item): ?>
-                <div class="cart-item">
-                    <img src="/assets/images/product.png" alt="Product Image">
-                    <div class="item-details">
-                        <h2><?= htmlspecialchars($item['name']) ?></h2>
-                        <p class="description"><?= htmlspecialchars($item['description'] ?? 'No description available') ?></p>
+        <?php
+        $subtotal = 0;
+        foreach ($shoppingCart as $item):
+            $subtotal += $item['price'] * $item['amount'];
+            ?>
+            <div class="cart-item">
+                <img src="path/to/product/image.jpg" alt="Product Image">
+                <div class="item-details">
+                    <h3><?= htmlspecialchars($item['name']) ?></h3>
+                    <p class="description"><?= htmlspecialchars($item['description']) ?></p>
+                    <p class="price">€<?= number_format($item['price'], 2) ?></p>
+                    <p class="price-per-piece">Per stuk: €<?= number_format($item['price'] / $item['amount'], 2) ?></p>
 
-                        <div class="quantity-controls">
-                            <form method="POST" style="display:inline;">
-                                <input type="number" name="amount" value="<?= $item['amount'] ?>" min="1">
-                                <input type="text" name="is_update" value="true" hidden>
-                                <button type="submit" name="id_item" value="<?= $item['id_item'] ?>">Update</button>
-                            </form>
-                        </div>
-                        <div class="price">€<?= number_format($item['amount'] * $item['price'], 2) ?></div>
-                    </div>
-                    <form method="POST" style="display:inline;">
-                        <input type="hidden" name="remove_id_item" value="<?= $item['id_item'] ?>">
-                        <button type="submit">Verwijder</button>
+                    <form action="" method="POST" class="quantity-controls">
+                        <input type="number" name="amount" value="<?= $item['amount'] ?>" min="1">
+                        <button type="submit">Update</button>
+                        <button type="submit" class="remove-btn">Remove</button>
+                        <input type="hidden" name="id_item" value="<?= $item['id_item'] ?>">
                     </form>
                 </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
     </div>
 
     <div class="sidebar">
-        <h1>Bestelling overzicht</h1>
+        <h1>Betaling en Bezorging</h1>
+        <div class="form-group">
+            <label for="address">Adres</label>
+            <input type="text" id="address" name="address" placeholder="Vul uw adres in">
+        </div>
 
-        <input class="coupon-input" type="text" placeholder="Voer kortingscode in">
-        <button class="coupon-btn">Pas Kortingscode Toe</button>
+        <div class="payment-method">
+            <label for="payment">Betaling Methode</label>
+            <select id="payment" name="payment">
+                <option value="creditcard" data-icon="creditcard">Creditcard</option>
+                <option value="paypal" data-icon="paypal">PayPal</option>
+                <option value="ideal" data-icon="ideal">iDEAL</option>
+            </select>
+            <img src="/assets/images/creditcard.png" class="payment-icon" alt="Payment Icon">
+        </div>
+
+        <div class="delivery-method">
+            <label for="delivery">Bezorg Methode</label>
+            <select id="delivery" name="delivery">
+                <option value="pickup" data-icon="pickup">Afhalen</option>
+                <option value="postnl" data-icon="postnl">PostNL</option>
+                <option value="dhl" data-icon="dhl">DHL</option>
+            </select>
+            <img src="/assets/images/winkel.png" class="delivery-icon" alt="Delivery Icon">
+        </div>
+
+        <div class="form-group">
+            <label for="coupon">Kortingscode</label>
+            <input type="text" id="coupon" name="coupon" placeholder="Voer kortingscode in">
+        </div>
+
+        <button class="coupon-btn">Kortingscode toepassen</button>
 
         <div class="summary">
-            <?php
-            $subtotal = 0;
-            foreach ($shoppingCart as $item) {
-                $subtotal += $item['amount'] * $item['price'];
-            }
+            <p>Subtotaal: €<?= number_format($subtotal, 2) ?></p>
+            <p>BTW (21%): €<?= number_format($subtotal * 0.21, 2) ?></p>
+            <p class="total-price">Totaal: €<?= number_format($subtotal * 1.21, 2) ?></p>
 
-            $tax = $subtotal * 0.21;
-            $total = $subtotal + $tax;
-            ?>
-            <p>Excl. BTW: €<?= number_format($subtotal, 2) ?></p>
-            <p>BTW (21%): €<?= number_format($tax, 2) ?></p>
-            <p class="total-price">Totaal (incl. BTW): €<?= number_format($total, 2) ?></p>
+            <button class="order-btn">Bestelling Plaatsen</button>
         </div>
     </div>
 </div>
+
+<script>
+    document.querySelector('#delivery').addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        const icon = selectedOption.getAttribute('data-icon');
+        const deliveryMethod = document.querySelector('.delivery-method .delivery-icon');
+        if (icon === 'postnl') {
+            deliveryMethod.src = '/assets/images/postnl.png';
+        } else if (icon === 'dhl') {
+            deliveryMethod.src = '/assets/images/dhl.png';
+        } else {
+            deliveryMethod.src = '/assets/images/winkel.png';
+        }
+    });
+
+    document.querySelector('#payment').addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        const icon = selectedOption.getAttribute('data-icon');
+        const deliveryMethod = document.querySelector('.payment-method .payment-icon');
+        if (icon === 'creditcard') {
+            deliveryMethod.src = '/assets/images/creditcard.png';
+        } else if (icon === 'ideal') {
+            deliveryMethod.src = '/assets/images/ideal.png';
+        } else if (icon === 'paypal') {
+            deliveryMethod.src = '/assets/images/paypal.png';
+        }
+    });
+</script>
 
 </body>
 </html>
