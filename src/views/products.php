@@ -1,6 +1,4 @@
 <?php
-include 'database/db.php';
-
 $mysqli = getDbConnection();
 
 $items_per_page = 25;
@@ -18,6 +16,35 @@ $result = $mysqli->query($sql);
 $total_result = $mysqli->query("SELECT COUNT(*) AS total FROM item");
 $total_products = $total_result->fetch_assoc()['total'];
 $total_pages = ceil($total_products / $items_per_page);
+
+function getShoppingCartItems($userId = null)
+{
+    if ($userId) {
+        $db = getDbConnection();
+        $sql = "
+        SELECT shopping_cart_item.id_item AS id_item, 
+               shopping_cart_item.amount AS amount
+        FROM shopping_cart_item
+        INNER JOIN shopping_cart ON shopping_cart_item.id_shopping_cart = shopping_cart.id_shopping_cart
+        WHERE shopping_cart.id_user = $userId
+    ";
+
+        $result = $db->query($sql);
+        return $result->fetch_all(MYSQLI_ASSOC);
+    } else {
+        return $_SESSION['shoppingCart'] ?? [];
+    }
+}
+
+$isLoggedIn = isset($auth) && $auth->isLoggedIn();
+$sessionCart = [];
+if ($isLoggedIn) {
+    $userData = $auth->getLoggedInUserData();
+    $userId = $userData['id_user'];
+    $sessionCart = getShoppingCartItems($userId);
+} else {
+    $sessionCart = getShoppingCartItems();
+}
 ?>
 
 <!DOCTYPE html>
@@ -102,12 +129,28 @@ $total_pages = ceil($total_products / $items_per_page);
             align-self: center;
             cursor: pointer;
             justify-content: center;
+            position: relative;
         }
 
         .product .shopping-basket img {
             width: 24px;
             height: 24px;
             align-self: center;
+        }
+
+        .product .item-count {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #FF5733;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .stars {
@@ -160,7 +203,7 @@ $total_pages = ceil($total_products / $items_per_page);
     </style>
 </head>
 <body>
-<!-- TODO: add header -->
+
 
 <div class="container">
     <div class="filter-bar">
@@ -168,7 +211,6 @@ $total_pages = ceil($total_products / $items_per_page);
         <p>Category</p>
         <p>Brand</p>
         <p>Price Range</p>
-        <!-- TODO: Add filtering options here -->
     </div>
 
     <div class="products">
@@ -181,15 +223,35 @@ $total_pages = ceil($total_products / $items_per_page);
                     <div class="container" style="justify-content: space-between">
                         <div style="flex-direction: column">
                             <h4>
-                                <a style="width: max-content" href="/products/<?= $product['id_item'] ?>">
+                                <a href="/products/<?= $product['id_item'] ?>">
                                     <?= htmlspecialchars($product['name']) ?>
                                 </a>
                             </h4>
                             <p class="price">€<?= number_format($product['price'], 2) ?></p>
                         </div>
-                        <button class="shopping-basket">
-                            <img src="/assets/images/shoppingbasket.png" alt="Add to Basket">
-                        </button>
+
+                        <?php
+                        // Find item count in session or from the database if logged in
+                        $item_count = 0;
+                        foreach ($sessionCart as $cartItem) {
+                            if ($cartItem['id_item'] == $product['id_item']) {
+                                $item_count = $cartItem['amount'];
+                                break;
+                            }
+                        }
+                        ?>
+
+                        <form method="POST" action="/shoppingcart" style="display:inline;">
+                            <input type="text" name="id_item" value="<?= $product['id_item'] ?>" hidden>
+                            <input type="number" name="amount" value="1" style="width: 40px;" hidden>
+                            <input type="hidden" name="price" value="<?= $product['price'] ?>">
+                            <button type="submit" name="add_to_cart" class="shopping-basket">
+                                <img src="/assets/images/shoppingbasket.png" alt="Add to Basket">
+                                <?php if ($item_count > 0): ?>
+                                    <div class="item-count"><?= $item_count ?></div>
+                                <?php endif; ?>
+                            </button>
+                        </form>
                     </div>
                     <p>
                         <span class="stars" style="--rating: <?= number_format($product['avg_rating'], 1) ?>;"></span>
@@ -210,6 +272,5 @@ $total_pages = ceil($total_products / $items_per_page);
     </div>
 </div>
 
-<!-- TODO: add footer -->
 </body>
 </html>

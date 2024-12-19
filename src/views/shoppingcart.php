@@ -1,275 +1,373 @@
-<HTML>
-
 <?php
-//session_start();
-include  'database/db.php';
-$userLoggedIn = 1;
-$_SESSION['LoggedInUser'] = 393;
-$current_datetime = date('Y-m-d H:i:s');
-$shoppingCartId = ""; // is set later in the first function, might seem abit weird but idk it works.
 
-// dummy products, this is how we expect it to be stored in the session. Everything should be a variable so id1 and product 1 are varibale. The number at the end is how much the customer wants
-// this is only there so people have an example of how we expect it to be stored, if you uncomment below it makes the site buggy af lol
-$_SESSION['shoppingCart'] = [];
+function getShoppingCartId($userId)
+{
+    $db = getDbConnection();
+    $sql = "SELECT id_shopping_cart FROM shopping_cart WHERE id_user = $userId";
+    $result = $db->query($sql);
+    $cart = $result->fetch_assoc();
 
-$_SESSION['shoppingCart'] = [
-    2 => [2, "product 1", "15,50", 1],
-    3 => [3, "product 2", "15,50", 1],
-    4 => [4, "product 3", "15,50", 1],
-];
-
-if(isset($_SESSION['LoggedInUser'])){
-    $dbConnection = getDbConnection();
-    $userId = $_SESSION['LoggedInUser'];
-    $query = "SELECT sci.amount, sci.id_item, i.`name`, i.price, sci.id_shopping_cart
-                FROM shopping_cart sc
-                LEFT JOIN shopping_cart_item sci ON sc.id_shopping_cart = sci.id_shopping_cart
-                LEFT JOIN item i ON sci.id_item = i.id_item
-                WHERE sc.id_user = $userId";
-
-    $queryResult = mysqli_query($dbConnection, $query);
-
-
-    if (!$queryResult) {
-        die("Query failed: " . mysqli_error($dbConnection));
+    if (!$cart) {
+        $sql = "INSERT INTO shopping_cart (id_user) VALUES ($userId)";
+        $db->query($sql);
+        return $db->insert_id;
     }
-    if($queryResult->num_rows > 1){
-        while ($row = mysqli_fetch_assoc($queryResult)) {
-            $itemId = $row['id_item'];
-            $itemName = $row['name'];
-            $itemPrice = number_format($row['price']);
-            $itemAmount = $row['amount'];
 
-            $shoppingCartId = $row['id_shopping_cart'];
+    return $cart['id_shopping_cart'];
+}
 
-            // Add the item to the shopping cart session
-            if(!isset($_SESSION['shoppingCart'][$itemId])){
-                $_SESSION['shoppingCart'][$itemId] = [
-                    $itemId,
-                    $itemName,
-                    $itemPrice,
-                    $itemAmount
-                ];
+function getCartItemsWithDetails($cartId)
+{
+    $db = getDbConnection();
+    $sql = "SELECT 
+                shopping_cart_item.id_item AS id_item, 
+                shopping_cart_item.amount AS amount, 
+                shopping_cart_item.id_shopping_cart, 
+                item.name, 
+                item.price, 
+                item.description 
+            FROM shopping_cart_item
+            JOIN item ON shopping_cart_item.id_item = item.id_item
+            WHERE shopping_cart_item.id_shopping_cart = $cartId";
+    $result = $db->query($sql);
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
 
-            }else{
-                $_SESSION['shoppingCart'][$itemId][3] + $itemAmount;
-            }
+function addOrUpdateCartItem($cartId, $itemId, $quantity, $is_update = false)
+{
+    $db = getDbConnection();
+    $sql = "SELECT amount FROM shopping_cart_item WHERE id_shopping_cart = $cartId AND id_item = $itemId";
+    $result = $db->query($sql);
+    $item = $result->fetch_assoc();
+
+    if ($item) {
+        if ($is_update) {
+            $sql = "UPDATE shopping_cart_item SET amount = $quantity WHERE id_shopping_cart = $cartId AND id_item = $itemId";
+        } else {
+            $sql = "UPDATE shopping_cart_item SET amount = amount + $quantity WHERE id_shopping_cart = $cartId AND id_item = $itemId";
         }
-    } else{
-        $sql = "SELECT id_shopping_cart FROM shopping_cart WHERE id_user = $userId";
-        $result = mysqli_query($dbConnection, $sql);
-        $shoppingCartId = ($row = mysqli_fetch_assoc($result)) ? $row['id_shopping_cart'] : null;
-        mysqli_close($dbConnection);
-
+        $db->query($sql);
+    } else {
+        $sql = "INSERT INTO shopping_cart_item (id_shopping_cart, id_item, amount) VALUES ($cartId, $itemId, $quantity)";
+        $db->query($sql);
     }
 }
 
-//Code below updates the amount the customer wants to buy to the php session variable
-//it gets the value from the hidden input field which is being updated with js
+function mergeSessionCart($userId, $sessionCart)
+{
+    $cartId = getShoppingCartId($userId);
+    foreach ($sessionCart as $item) {
+        addOrUpdateCartItem($cartId, $item['id_item'], $item['amount']);
+    }
+}
+
+function getSessionCartItems()
+{
+    return $_SESSION['shoppingCart'] ?? [];
+}
+
+function setSessionCartItems($items)
+{
+    $_SESSION['shoppingCart'] = $items;
+}
+
+$sessionCart = getSessionCartItems();
+
+if ($auth->isLoggedIn()) {
+    $userData = $auth->getLoggedInUserData();
+    $userId = $userData['id_user'];
+    mergeSessionCart($userId, $sessionCart);
+    setSessionCartItems([]);
+    $cartId = getShoppingCartId($userId);
+    $shoppingCart = getCartItemsWithDetails($cartId);
+} else {
+    $shoppingCart = [];
+    foreach ($sessionCart as $item) {
+        $db = getDbConnection();
+        $sql = "SELECT id_item, name, price, description FROM item WHERE id_item = " . (int)$item['id_item'];
+        $result = $db->query($sql);
+        $product = $result->fetch_assoc();
+
+        if ($product) {
+            $shoppingCart[] = [
+                'id_item' => $product['id_item'],
+                'name' => $product['name'],
+                'price' => $product['price'],
+                'description' => $product['description'],
+                'amount' => $item['amount']
+            ];
+        }
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['formType'])) {
-        if ($_POST['formType'] === 'purchaseCart' && isset($_POST['amounts'])) {
-            $dbConnection = getDbConnection();
-            foreach ($_POST['amounts'] as $productId => $amount) {
-                // Update the shopping cart amount and check if db also need to be updated, if so then do so
-                if (isset($_SESSION['shoppingCart'][$productId])) {
-                    if ($amount > 0) {
-                        $_SESSION['shoppingCart'][$productId][3] = $amount;
-                        if (isset($_SESSION['LoggedInUser'])) {
-                            $sqlcheckIfItemInDbShoppingCartExsist = "SELECT sci.id_item
-                                                        FROM shopping_cart_item sci
-                                                        LEFT JOIN shopping_cart sc ON sci.id_shopping_cart = sc.id_shopping_cart
-                                                        WHERE sc.id_user = $userId";
+    if (isset($_POST['id_item']) && isset($_POST['amount']) && is_numeric($_POST['amount']) && $_POST['amount'] > 0) {
+        $itemId = (int)$_POST['id_item'];
+        $quantity = (int)$_POST['amount'];
 
-                            $checkIfItemInDbExsist = mysqli_query($dbConnection, $sqlcheckIfItemInDbShoppingCartExsist);
-
-                            if ($checkIfItemInDbExsist->num_rows <= 1) {
-                                while ($product = current($_SESSION['shoppingCart'])) {
-                                    $productId = $product[0];
-                                    $amount = $product[3];
-                                    echo $amount;
-                                    echo "<br>";
-
-                                    // Insert into shopping_cart_item
-                                    $sqlInsert = "INSERT INTO shopping_cart_item (id_shopping_cart, id_item, amount)
-                                    VALUES ($shoppingCartId, $productId, $amount)";
-                                    echo $shoppingCartId;
-                                    mysqli_query($dbConnection, $sqlInsert);
-
-                                    // Move to the next item in the array
-                                    next($_SESSION['shoppingCart']);
-                                }
-                            }
-                            $sqlUpdateShoppingCartItemAmount = "UPDATE shopping_cart_item
-                                                                SET amount = $amount
-                                                                WHERE id_shopping_cart = $shoppingCartId 
-                                                                AND id_item = $productId";
-
-                            mysqli_query($dbConnection, $sqlUpdateShoppingCartItemAmount);
-                        }
-                        // Update the amount in session
+        if ($auth->isLoggedIn()) {
+            $userData = $auth->getLoggedInUserData();
+            $userId = $userData['id_user'];
+            $cartId = getShoppingCartId($userId);
+            addOrUpdateCartItem($cartId, $itemId, $quantity, isset($_POST['is_update']));
+            $shoppingCart = getCartItemsWithDetails($cartId);
+        } else {
+            $sessionCart = getSessionCartItems();
+            $exists = false;
+            foreach ($sessionCart as &$item) {
+                if ($item['id_item'] == $itemId) {
+                    if (isset($_POST['is_update'])) {
+                        $item['amount'] = $quantity;
                     } else {
-                        if (isset($_SESSION['LoggedInUser'])) {
-                            $productId = $_SESSION['shoppingCart'][$productId][0];
-                            $userId = $_SESSION['LoggedInUser'];
-                            $sqlQueryToDeleteFromShoppingCart = "
-                                DELETE sci
-                                FROM shopping_cart_item sci
-                                JOIN shopping_cart sc ON sc.id_shopping_cart = sci.id_shopping_cart
-                                WHERE sci.id_item = $productId AND sc.id_user = $userId";
-
-                            mysqli_query($dbConnection, $sqlQueryToDeleteFromShoppingCart);
-                        }
-                        unset($_SESSION['shoppingCart'][$productId]);  // Remove product from session if amount is 0
+                        $item['amount'] += $quantity;
                     }
+                    $exists = true;
+                    break;
                 }
             }
+            if (!$exists) {
+                $sessionCart[] = ['id_item' => $itemId, 'amount' => $quantity];
+            }
+            setSessionCartItems($sessionCart);
+            $shoppingCart = $sessionCart;
         }
     }
-}
-// update the database
-if (isset($_POST['PurchaseButton2'])) {
-    $dbConnection = getDbConnection();
-    if (isset($_SESSION['LoggedInUser'])) {
-        //create order
-        $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status, id_user) VALUES ('$current_datetime', 1, $userId)"; // the status is set to 1 for now, this is the happy flow
-        mysqli_query($dbConnection, $sqlCreateOrder);
 
-        //get created order id
-        $lastInsertedId = mysqli_insert_id($dbConnection);
-        createOrderDetail($lastInsertedId);
-    }else{
-        $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status, id_user) VALUES ('$current_datetime', 1, 1)"; // the status is set to 1 for now, this is the happy flow
-        // the id_user is set to 1, de database always expect a user so id_user is now a geust user for people without an account
-        mysqli_query($dbConnection, $sqlCreateOrder);
+    if (isset($_POST['remove_id_item'])) {
+        $itemIdToRemove = (int)$_POST['remove_id_item'];
+        if ($auth->isLoggedIn()) {
+            $userData = $auth->getLoggedInUserData();
+            $userId = $userData['id_user'];
+            $cartId = getShoppingCartId($userId);
 
-        //get created order id
-        $lastInsertedId = mysqli_insert_id($dbConnection);
-        createOrderDetail($lastInsertedId);
-        // clear the shopping_cart_item table after purchase is done
+            $sql = "DELETE FROM shopping_cart_item WHERE id_shopping_cart = $cartId AND id_item = $itemIdToRemove";
+            getDbConnection()->query($sql);
+
+            $shoppingCart = getCartItemsWithDetails($cartId);
+        } else {
+            foreach ($sessionCart as $key => $item) {
+                if ($item['id_item'] == $itemIdToRemove) {
+                    unset($sessionCart[$key]);
+                    break;
+                }
+            }
+            setSessionCartItems($sessionCart);
+            $shoppingCart = $sessionCart;
+        }
     }
-    clearShoppingCart();
-    mysqli_close($dbConnection);
-}
 
-
-function clearShoppingCart(){
-    if($_SESSION['LoggedInUser']){
-        $userId = $_SESSION['LoggedInUser'];
-        $dbconnection = getDbConnection();
-
-        $sqlDeleteItems = "DELETE sci
-                       FROM shopping_cart_item sci
-                       LEFT JOIN shopping_cart sc ON sc.id_shopping_cart = sci.id_shopping_cart
-                       WHERE sc.id_user = $userId";
-
-
-        mysqli_query($dbconnection, $sqlDeleteItems);
-        mysqli_close($dbconnection);
-    } else{
-        unset($_SESSION['shoppingCart']);
-        echo "done";
-    }
-}
-
-function createOrderDetail($lastInsertedId){
-    $dbConnection = getDbConnection();
-    foreach ($_SESSION['shoppingCart'] as $product) {
-        $productId = $product[0];
-        $amount = $product[3];
-
-        $sqlCreateOrderDetail = "INSERT INTO order_detail (amount, id_item, id_order) VALUES ($amount, $productId, $lastInsertedId)";
-
-        mysqli_query($dbConnection, $sqlCreateOrderDetail);
-    }
-    mysqli_close($dbConnection);
+    $referer = $_SERVER['HTTP_REFERER'] ?? '/products';
+    header('Location: ' . $referer);
+    exit;
 }
 
 ?>
-<script>
-    //TODO make the two fucntions below one
-    //code below updates the amount the customer wants to buy on the client side and the hidden input field so php can get the variable from there
-    //could also write a mapping but that is too much work... :)
-    function incrementAmount(productId) {
-        const element = document.getElementById('incrementText_' + productId);
-        const hiddenInput = document.getElementById('hiddenInput_' + productId);
 
-        if (element && hiddenInput) {
-            let value = parseInt(element.innerHTML);
-            value++;
-            element.innerHTML = value;
-            hiddenInput.value = value;
-        }
-    }
-    //code below updates the amount the customer wants to buy on the client side and the hidden input field so php can get the variable from there
-    //could also write a mapping but that is too much work... :)
-    function decrementAmount(productId) {
-        const hiddenInput = document.getElementById('hiddenInput_' + productId);
-        const element = document.getElementById('incrementText_' + productId);
-
-        if (element && hiddenInput) {
-            let value = parseInt(element.innerHTML);
-            if (value > 0) {
-                value--;
-            }
-            element.innerHTML = value;
-            hiddenInput.value = value;
-        }
-    }
-</script>
-
+<!DOCTYPE html>
+<html lang="nl">
 <head>
-    <title>Shopping Cart</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winkelwagentje</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            background-color: #f4f4f4;
+        }
+
+        .cart-container {
+            width: 70%;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .cart-items, .sidebar {
+            width: 48%;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-items h1, .sidebar h1 {
+            color: #2c3e50; /* Matching product.php heading color */
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .cart-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-item img {
+            width: 25%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .cart-item .item-details {
+            flex-grow: 1;
+            margin-left: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .cart-item .price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #27ae60; /* Price green color */
+        }
+
+        .cart-item .description {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .cart-item .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cart-item .quantity-controls input {
+            width: 50px;
+            text-align: center;
+            padding: 5px;
+        }
+
+        .cart-item button {
+            background: #30B6FA;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .cart-item button:hover {
+            background: #2289bc;
+        }
+
+        .sidebar {
+            background-color: #ecf0f1;
+        }
+
+        .sidebar .coupon-input {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .sidebar .coupon-btn {
+            background: #30B6FA;
+            border: none;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .sidebar .coupon-btn:hover {
+            background: #30B6FA;
+        }
+
+        .sidebar .summary {
+            margin-top: 20px;
+        }
+
+        .sidebar .summary p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .sidebar .summary .total-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .cart-items, .sidebar {
+            border-radius: 10px;
+        }
+
+    </style>
 </head>
-
 <body>
-    <h1>Shopping Cart</h1>
-    <form method="POST" action="/shoppingcart">
-        <input type="hidden" name="formType" value="updateCart">
-        <table>
-            <tr>
-                <th>Plaatje</th>
-                <th>Product ID</th>
-                <th>Prijs</th>
-                <th>Naam</th>
-                <th>Aantal</th>
-            </tr>
+
+<div class="cart-container">
+    <!-- Cart Items -->
+    <div class="cart-items">
+        <h1>Winkelmandje</h1>
+
+        <?php if (empty($shoppingCart)): ?>
+            <p>Uw Winkelmandje is leeg.</p>
+        <?php else: ?>
+            <?php foreach ($shoppingCart as &$item): ?>
+                <div class="cart-item">
+                    <img src="/assets/images/product.png" alt="Product Image">
+                    <div class="item-details">
+                        <h2><?= htmlspecialchars($item['name']) ?></h2>
+                        <p class="description"><?= htmlspecialchars($item['description'] ?? 'No description available') ?></p>
+
+                        <div class="quantity-controls">
+                            <form method="POST" style="display:inline;">
+                                <input type="number" name="amount" value="<?= $item['amount'] ?>" min="1">
+                                <input type="text" name="is_update" value="true" hidden>
+                                <button type="submit" name="id_item" value="<?= $item['id_item'] ?>">Update</button>
+                            </form>
+                        </div>
+                        <div class="price">€<?= number_format($item['amount'] * $item['price'], 2) ?></div>
+                    </div>
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="remove_id_item" value="<?= $item['id_item'] ?>">
+                        <button type="submit">Verwijder</button>
+                    </form>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
+
+    <div class="sidebar">
+        <h1>Bestelling overzicht</h1>
+
+        <input class="coupon-input" type="text" placeholder="Voer kortingscode in">
+        <button class="coupon-btn">Pas Kortingscode Toe</button>
+
+        <div class="summary">
             <?php
-            foreach ($_SESSION['shoppingCart'] as $product) {
-                $productId = $product[0];  // The product ID
-                $productName = $product[1];  // The product name
-                $productPrice = $product[2]; // The product price
-                $amount = $product[3];  // The amount
-
-                echo "
-                <tr>
-                    <td>plaatje</td>
-                    <td>$productId</td> 
-                    <td>$productPrice</td> 
-                    <td>$productName</td> 
-                    <td>
-                        <button type='submit' onclick='incrementAmount(\"$productId\")'>+</button>
-                    </td>
-                    <td>
-                        <label id='incrementText_$productId'>$amount</label>
-                        <input type='hidden' name='amounts[$productId]' id='hiddenInput_$productId' value='$amount'>
-                    </td> 
-                    <td>
-                        <button type='submit' onclick='decrementAmount(\"$productId\")'>-</button>
-                    </td>
-                </tr>
-            ";
+            $subtotal = 0;
+            foreach ($shoppingCart as $item) {
+                $subtotal += $item['amount'] * $item['price'];
             }
-            ?>
-        </table>
-        <br>
-        <input type="hidden" name="formType" value="purchaseCart">
-    </form>
-    <form method="POST" action="/shoppingcart">
-        <input type="submit" name="PurchaseButton2" value="Koop winkelwagen">
-    </form>
-</body>
-<footer>
 
-</footer>
+            $tax = $subtotal * 0.21;
+            $total = $subtotal + $tax;
+            ?>
+            <p>Excl. BTW: €<?= number_format($subtotal, 2) ?></p>
+            <p>BTW (21%): €<?= number_format($tax, 2) ?></p>
+            <p class="total-price">Totaal (incl. BTW): €<?= number_format($total, 2) ?></p>
+        </div>
+    </div>
+</div>
+
+</body>
 </html>

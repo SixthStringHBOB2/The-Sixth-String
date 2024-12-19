@@ -55,7 +55,7 @@ class Auth
         return false;
     }
 
-    public function isLoggedIn()
+    public function isLoggedIn(): bool
     {
         return isset($_SESSION['user']);
     }

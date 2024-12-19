@@ -44,7 +44,7 @@ $router->get('/post/{id}', function ($id, $queryParams) {
     include 'views/home.php';
 });
 
-$router->get('/products', function ()  {
+$router->any('/products', function () use ($auth) {
     include 'views/products.php';
 });
 
@@ -53,11 +53,11 @@ $router->get('/search', function ($queryParams) {
     echo "Search query: $searchQuery";
 });
 
-$router->get('/shoppingcart', function () {
+$router->get('/shoppingcart',  function () use ($auth) {
     include 'views/shoppingcart.php';
 });
 
-$router->post('/shoppingcart', function () {
+$router->post('/shoppingcart',  function () use ($auth) {
     include 'views/shoppingcart.php';
 });
 
