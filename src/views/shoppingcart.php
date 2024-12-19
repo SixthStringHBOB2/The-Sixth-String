@@ -133,8 +133,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if (isset($_POST['remove_id_item'])) {
-        $itemIdToRemove = (int)$_POST['remove_id_item'];
+    if (isset($_POST['action']) && $_POST['action'] === 'remove' && isset($_POST['id_item'])) {
+        $itemIdToRemove = (int)$_POST['id_item'];
         if ($auth->isLoggedIn()) {
             $userData = $auth->getLoggedInUserData();
             $userId = $userData['id_user'];
@@ -409,11 +409,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <form action="" method="POST" class="quantity-controls">
                         <input type="number" name="amount" value="<?= $item['amount'] ?>" min="1">
-                        <input type="text" name="is_update" value="true" hidden>
-                        <button type="submit">Update</button>
-                        <button type="submit" class="remove-btn">Remove</button>
                         <input type="hidden" name="id_item" value="<?= $item['id_item'] ?>">
+                        <input type="hidden" name="is_update" value="true">
+                        <button type="submit" name="action" value="update">Update</button>
+                        <button type="submit" name="action" value="remove" class="remove-btn">Remove</button>
                     </form>
+
+
                 </div>
             </div>
         <?php endforeach; ?>
