@@ -400,7 +400,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $subtotal += $item['price'] * $item['amount'];
             ?>
             <div class="cart-item">
-                <img src="path/to/product/image.jpg" alt="Product Image">
+                <img src="/assets/images/product.png" alt="Product Image">
                 <div class="item-details">
                     <h3><?= htmlspecialchars($item['name']) ?></h3>
                     <p class="description"><?= htmlspecialchars($item['description']) ?></p>
@@ -409,6 +409,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <form action="" method="POST" class="quantity-controls">
                         <input type="number" name="amount" value="<?= $item['amount'] ?>" min="1">
+                        <input type="text" name="is_update" value="true" hidden>
                         <button type="submit">Update</button>
                         <button type="submit" class="remove-btn">Remove</button>
                         <input type="hidden" name="id_item" value="<?= $item['id_item'] ?>">
