@@ -16,7 +16,7 @@
     </style>
 </head>
 <body style="background-color:white;">
-<img src="./afbeeldingen/banner 3.jpg/" class="Banner-Img">
+<img src="./Afbeeldingen/Banner3.jpg/" class="Banner-Img">
 <div>
     <?php include './Assets/Header.php';?>
 </div>
@@ -29,47 +29,47 @@
 
 <div class="white-seperation-bar"></div>
 <div class="Contenblok1">
-    <h2 style="padding: 0px 50px">Onze producten.</h2>
-    <div class="flex-itemframes-container">
+    <h2 style="padding: 0px 50px; margin-left: auto; margin-right: auto; max-width:1900px;">Onze producten.</h2>
+    <div class="flex-itemframes-container" style="margin-left: auto; margin-right: auto; margin-bottom: 50px;">
         <div class="item-frame1 , flex-column-standaard">
             <img src="Afbeeldingen/gitaar.jpg" class="img-item-frame1">
             <h3 class="h3-item-frame1">Gitaren</h3>
             <ul>
-                <li class ="link3" class="Arrow">Basgitaren</li>
-                <li class = link3>Elektrische gitaren</li>
-                <li class = link3>Akoestische gitaren</li>
-                <li class = link3>Gebruikte gitaren</li>
+                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Basgitaren</a></li>
+                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Elektrische gitaren</a></li>
+                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Akoestische gitaren</a></li>
+                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Gebruikte gitaren</a></li>
             </ul>
-            <button class="button1">Bekijk alles</button>
+            <a href="" class="button1">Bekijk alles</a>
         </div>
         <div class="item-frame1 , flex-column-standaard"">
             <img src="Afbeeldingen/Versterker 1.jpg" class="img-item-frame1">
             <h3 class="h3-item-frame1">Versterkers</h3>
             <ul>
-                <li class ="link3" class="Arrow">Buizen versterkers</li>
-                <li class ="link3" class="Arrow">Transistor versterkers</li>
-                <li class ="link3" class="Arrow">Hybride versterkers</li>
-                <li class ="link3" class="Arrow">Gebruikte versterkers</li>
+                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Buizen versterkers</a></li>
+                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Transistor versterkers</a></li>
+                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Hybride versterkers</a></li>
+                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Gebruikte versterkers</a></li>
             </ul>
-            <button class="button1">Bekijk alles</button>
+        <a href="" class="button1">Bekijk alles</a>
         </div>
         <div class="item-frame1  , flex-column-standaard"">
             <img src="Afbeeldingen/Gitaar accessoires 2.jpg" class="img-item-frame1"></img>
             <h3 class="h3-item-frame1">Accessoires</h3>
             <ul>
-                <li class ="link3" class="Arrow">Houders en standaarden</li>
-                <li class ="link3" class="Arrow">Straps</li>
-                <li class ="link3" class="Arrow">Microfoons</li>
-                <li class ="link3" class="Arrow">Audio apperatuur</li>
+                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Houders en standaarden</a></li>
+                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Straps</a></li>
+                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Microfoons</a></li>
+                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Audio apperatuur</a></li>
             </ul>
-            <button class="button1">Bekijk alles</button>
+            <a href="" class="button1">Bekijk alles</a>
         </div>
     </div>
 
 </div>
-<div style="background-color: white">
-    <div style="padding: 40px 20px 0px 10%; height: 50%">
-        <div class="flex-column-standaard , beschrijving-naast-img">
+<div style="background-color: white;">
+    <div class="beschrijving-flex" style=" margin-left: auto; margin-right: auto; ">
+        <div class="beschrijving-product" style="left: 20px;">
             <h2 style="text-decoration: none"><span class="highlight">Persoonlijk</span> advies en aandacht is onze <span class="highlight">missie</span>.</h2>
             <p>Bij ons draait alles om persoonlijk advies en aandacht.Of je nu net begint of een
                 ervaren gitarist bent, wij helpen je graag bij het vinden van jouw ideale gitaar
@@ -78,11 +78,17 @@
                 hetzelfde persoonlijke advies. Plan gerust een persoonlijk adviesgesprek in
                 <span class="extrabold">– we staan voor je klaar om je te helpen bij elke muzikale stap!</span><br>
                 <br>
-                Email: info@TheSixthString.nl<br>
-                Tel: 06 1234 5678</p>
-                <button class="button3">Plan een adviesgesprek</button>
+               Email:  <a href="mailto:info@TheSixthString.nl?subject=Contact" class="link3">info@TheSixthString.nl</a><br>
+                Tel: <a href="tel:+31612345678" class="link3">06 1234 5678</a></p>
+                <div class="flex-dubbel-button" style="justify-content: center;">
+                    <a href="mailto:info@TheSixthString.nl?subject=Inplannen advies gesprek&body=Laat ons weten wanneer je graag langs zou willen komen.">
+                        <button class="button3"  style="min-width: 100%">Plan een adviesgesprek</button></a>
+                </div>
+
         </div>
-        <img src="Afbeeldingen/Medewerkers.jpg" class="img-naast-beschrijving , img-rechts">
+
+            <img src="Afbeeldingen/Medewerkers.jpg" style="left: 20px; object-position: top; max-width: 1000px;" class="beschrijving-product-img">
+
     </div>
 
 
