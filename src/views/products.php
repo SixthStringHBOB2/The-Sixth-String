@@ -34,7 +34,8 @@ if (count($selectedStates) > 1) {
 
 $minPrice = isset($_GET['minPrice']) ? (float)$_GET['minPrice'] : 0;
 $maxPrice = isset($_GET['maxPrice']) ? (float)$_GET['maxPrice'] : 10000;
-// TODO: reviews
+
+$selectedReviews = isset($_GET['reviews']) ? (float)ltrim($_GET['reviews'], 'r') : 0;
 
 // Pagination
 $items_per_page = 25;
@@ -45,7 +46,6 @@ try {
     // Establish connection
     $mysqli = getDbConnection();
 
-// Get products
     $productsSQL = "SELECT item.id_item, item.name, item.price, item.description, 
                 COALESCE(AVG(review.rating), 0) AS avg_rating 
                 FROM item 
@@ -74,8 +74,14 @@ try {
         $productsSQL .= " AND item.price < ($maxPrice)";
     }
 
-    $productsSQL .= " GROUP BY item.id_item 
-                  LIMIT $items_per_page OFFSET $offset";
+    if (!empty($selectedReviews)) {
+        $productsSQL .= " GROUP BY item.id_item 
+                      HAVING COALESCE(AVG(review.rating), 0) >= ($selectedReviews)";
+    } else {
+        $productsSQL .= " GROUP BY item.id_item";
+    }
+
+    $productsSQL .= " LIMIT $items_per_page OFFSET $offset";
 
 
     $products = $mysqli->query($productsSQL);
@@ -302,37 +308,22 @@ try {
         <!-- Review Filter -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-[#546E7A]">Beoordeling</label>
+
+            <?php
+            $reviewOptions = [5, 4, 3, 2, 1];
+            foreach ($reviewOptions as $review) {
+                $isChecked = ($selectedReviews == $review) ? 'checked' : '';
+                echo '
             <div class="flex items-center">
-                <input type="radio" id="review5" name="review"
+                <input type="radio" id="review' . $review . '" name="review"
                        class="h-4 w-4 text-[#546E7A] border-gray-300 focus:ring-[#546E7A]" data-filter="review"
-                       data-id="5">
-                <label for="review5" class="ml-2 text-sm text-gray-700">5 sterren</label>
-            </div>
-            <div class="flex items-center">
-                <input type="radio" id="review4" name="review"
-                       class="h-4 w-4 text-[#546E7A] border-gray-300 focus:ring-[#546E7A]" data-filter="review"
-                       data-id="4">
-                <label for="review4" class="ml-2 text-sm text-gray-700">4+ sterren</label>
-            </div>
-            <div class="flex items-center">
-                <input type="radio" id="review3" name="review"
-                       class="h-4 w-4 text-[#546E7A] border-gray-300 focus:ring-[#546E7A]" data-filter="review"
-                       data-id="3">
-                <label for="review3" class="ml-2 text-sm text-gray-700">3+ sterren</label>
-            </div>
-            <div class="flex items-center">
-                <input type="radio" id="review2" name="review"
-                       class="h-4 w-4 text-[#546E7A] border-gray-300 focus:ring-[#546E7A]" data-filter="review"
-                       data-id="2">
-                <label for="review2" class="ml-2 text-sm text-gray-700">2+ sterren</label>
-            </div>
-            <div class="flex items-center">
-                <input type="radio" id="review1" name="review"
-                       class="h-4 w-4 text-[#546E7A] border-gray-300 focus:ring-[#546E7A]" data-filter="review"
-                       data-id="1">
-                <label for="review1" class="ml-2 text-sm text-gray-700">1+ sterren</label>
-            </div>
+                       data-id="r' . $review . '" ' . $isChecked . '>
+                <label for="review' . $review . '" class="ml-2 text-sm text-gray-700">' . $review . '+ sterren</label>
+            </div>';
+            }
+            ?>
         </div>
+
         <button id="clearFilters">Clear Filters</button>
 
         <button class="mt-4 w-full py-2 px-4 bg-[#546E7A] text-white rounded-lg hover:bg-[#4A5E66] focus:outline-none focus:ring-2 focus:ring-[#546E7A] focus:ring-opacity-50"
@@ -407,11 +398,12 @@ try {
                 selectedFilters.states.push(checkbox.getAttribute('data-id'));
             });
 
-            // // Get selected reviews
-            // const reviewRadios = document.querySelectorAll('[data-filter="review"]:checked');
-            // reviewRadios.forEach(radio => {
-            //     selectedFilters.review.push(radio.getAttribute('data-id'));
-            // });
+            // Get selected reviews
+            const reviewRadios = document.querySelectorAll('[data-filter="review"]:checked');
+            reviewRadios.forEach(radio => {
+                selectedFilters.review = selectedFilters.review || [];
+                selectedFilters.review.push(radio.getAttribute('data-id'));
+            });
 
             return selectedFilters;
         }
@@ -436,9 +428,9 @@ try {
             params.set('minPrice', selectedFilters.minPrice);
             params.set('maxPrice', selectedFilters.maxPrice);
 
-            // if (selectedFilters.review.length > 0) {
-            //     params.set('reviews', selectedFilters.review.join(','));
-            // }
+            if (selectedFilters.review.length > 0) {
+                params.set('reviews', selectedFilters.review.join(','));
+            }
 
             window.history.pushState({}, '', '?' + params.toString());
         }
@@ -485,14 +477,14 @@ try {
                 });
             }
 
-            // // Apply review filters
-            // const reviews = urlParams.get('reviews');
-            // if (reviews) {
-            //     reviews.split(',').forEach(rating => {
-            //         const radio = document.querySelector(`[data-value="${rating}"]`);
-            //         if (radio) radio.checked = true;
-            //     });
-            // }
+            // Apply review filters
+            const reviews = urlParams.get('reviews');
+            if (reviews) {
+                reviews.split(',').forEach(rating => {
+                    const radio = document.querySelector(`[data-value="${rating}"]`);
+                    if (radio) radio.active = true;
+                });
+            }
 
             // Clear filters
             function clearFilters() {
