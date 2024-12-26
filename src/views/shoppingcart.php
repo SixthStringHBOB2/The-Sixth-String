@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: 0;
             display: flex;
             justify-content: center;
-            background-color: #f4f4f4;
+            background-color: #D9D9D9;
         }
 
         .cart-container {
@@ -153,22 +153,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .cart-item button {
-            background: #30B6FA;
+            background: linear-gradient(to right, #C7914E, #61584D);
             border: none;
             color: white;
             padding: 8px 15px;
-            border-radius: 5px;
+            border-radius: 15px;
             cursor: pointer;
             transition: background-color 0.3s;
+            font-weight: bold;
         }
 
         .cart-item button:hover {
-            background: #2289bc;
+            background: linear-gradient(to right, #61584D, #C7914E);
         }
 
         .cart-item .remove-btn {
             background-color: red;
             color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
         }
 
         .sidebar {
@@ -184,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .sidebar .coupon-btn {
-            background: #30B6FA;
+            background: linear-gradient(to right, #C7914E, #61584D);
             border: none;
             color: white;
             padding: 10px;
@@ -192,10 +195,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: bold;
         }
 
         .sidebar .coupon-btn:hover {
-            background: #30B6FA;
+            background: linear-gradient(to right, #61584D, #C7914E);
         }
 
         .sidebar .summary {
@@ -219,7 +223,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         input, select {
             background: white;
-            width: 100%;
+            width: 90%;
             padding: 10px;
             margin-top: 5px;
             border: 1px solid #ccc;
@@ -252,19 +256,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .order-btn {
-            background: #2ecc71;
+            background: linear-gradient(to right, #C7914E, #61584D);
             border: none;
             color: white;
             padding: 15px;
             width: 100%;
-            border-radius: 5px;
+            border-radius: 15px;
             cursor: pointer;
             font-size: 18px;
+            font-weight: bold;
             margin-top: 20px;
         }
 
         .order-btn:hover {
-            background: #27ae60;
+            background: linear-gradient(to right, #61584D, #C7914E);
         }
 
         select option {
@@ -272,6 +277,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-size: 20px;
             background-repeat: no-repeat;
             background-position: left center;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        input[type="radio"] + label {
+            position: relative;
+            padding-left: 30px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        input[type="radio"] + label:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #61584D;
+            background-color: white;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        input[type="radio"]:checked + label:before {
+            background-color: #61584D;
+            border-color: #C7914E;
+        }
+
+        input[type="radio"]:checked + label {
+            color: #61584D;
         }
 
     </style>
