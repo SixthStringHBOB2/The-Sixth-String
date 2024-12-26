@@ -117,10 +117,8 @@ class Router
 
     private function handleAuthRedirect()
     {
-        echo '<script>
-                alert("You must be logged in to access this page.");
-                window.location.href = "/login";
-              </script>';
+        $redirectPath = urlencode($_SERVER['REQUEST_URI']);
+        header("Location: /login?redirect_path=$redirectPath");
         exit;
     }
 }

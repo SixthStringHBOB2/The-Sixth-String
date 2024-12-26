@@ -1,4 +1,5 @@
 <?php
+
 $mysqli = getDbConnection();
 
 $items_per_page = 25;
@@ -17,34 +18,31 @@ $total_result = $mysqli->query("SELECT COUNT(*) AS total FROM item");
 $total_products = $total_result->fetch_assoc()['total'];
 $total_pages = ceil($total_products / $items_per_page);
 
-function getShoppingCartItems($userId = null)
-{
-    if ($userId) {
-        $db = getDbConnection();
-        $sql = "
-        SELECT shopping_cart_item.id_item AS id_item, 
-               shopping_cart_item.amount AS amount
-        FROM shopping_cart_item
-        INNER JOIN shopping_cart ON shopping_cart_item.id_shopping_cart = shopping_cart.id_shopping_cart
-        WHERE shopping_cart.id_user = $userId
-    ";
-
-        $result = $db->query($sql);
-        return $result->fetch_all(MYSQLI_ASSOC);
-    } else {
-        return $_SESSION['shoppingCart'] ?? [];
-    }
-}
-
 $isLoggedIn = isset($auth) && $auth->isLoggedIn();
 $sessionCart = [];
 if ($isLoggedIn) {
     $userData = $auth->getLoggedInUserData();
     $userId = $userData['id_user'];
-    $sessionCart = getShoppingCartItems($userId);
+    $shoppingCartService = new ShoppingCartService($auth, $mysqli);
+    $sessionCart = $shoppingCartService->getCartItems($userId);
 } else {
-    $sessionCart = getShoppingCartItems();
+    $shoppingCartService = new ShoppingCartService($auth, $mysqli);
+    $sessionCart = $shoppingCartService->getSessionCartItems();
 }
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
+    $itemId = (int)$_POST['id_item'];
+    $amount = (int)$_POST['amount'];
+
+    if ($isLoggedIn) {
+        $shoppingCartService->addItemToCart($userId, $itemId, $amount);
+    } else {
+        $shoppingCartService->addToSessionCart($itemId, $amount);
+    }
+    header("Location: " . $_SERVER['REQUEST_URI']);
+    exit();
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -204,7 +202,6 @@ if ($isLoggedIn) {
 </head>
 <body>
 
-
 <div class="container">
     <div class="filter-bar">
         <h3>Filters</h3>
@@ -231,7 +228,6 @@ if ($isLoggedIn) {
                         </div>
 
                         <?php
-                        // Find item count in session or from the database if logged in
                         $item_count = 0;
                         foreach ($sessionCart as $cartItem) {
                             if ($cartItem['id_item'] == $product['id_item']) {
@@ -241,7 +237,7 @@ if ($isLoggedIn) {
                         }
                         ?>
 
-                        <form method="POST" action="/shoppingcart" style="display:inline;">
+                        <form method="POST" action="/products" style="display:inline;">
                             <input type="text" name="id_item" value="<?= $product['id_item'] ?>" hidden>
                             <input type="number" name="amount" value="1" style="width: 40px;" hidden>
                             <input type="hidden" name="price" value="<?= $product['price'] ?>">

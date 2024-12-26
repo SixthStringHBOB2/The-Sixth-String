@@ -1,106 +1,23 @@
 <?php
 
-function getShoppingCartId($userId)
-{
-    $db = getDbConnection();
-    $sql = "SELECT id_shopping_cart FROM shopping_cart WHERE id_user = $userId";
-    $result = $db->query($sql);
-    $cart = $result->fetch_assoc();
+$sessionCart = $shoppingCartService->getSessionCartItems();
 
-    if (!$cart) {
-        $sql = "INSERT INTO shopping_cart (id_user) VALUES ($userId)";
-        $db->query($sql);
-        return $db->insert_id;
-    }
-
-    return $cart['id_shopping_cart'];
-}
-
-function getCartItemsWithDetails($cartId)
-{
-    $db = getDbConnection();
-    $sql = "SELECT 
-                shopping_cart_item.id_item AS id_item, 
-                shopping_cart_item.amount AS amount, 
-                shopping_cart_item.id_shopping_cart, 
-                item.name, 
-                item.price, 
-                item.description 
-            FROM shopping_cart_item
-            JOIN item ON shopping_cart_item.id_item = item.id_item
-            WHERE shopping_cart_item.id_shopping_cart = $cartId";
-    $result = $db->query($sql);
-    return $result->fetch_all(MYSQLI_ASSOC);
-}
-
-function addOrUpdateCartItem($cartId, $itemId, $quantity, $is_update = false)
-{
-    $db = getDbConnection();
-    $sql = "SELECT amount FROM shopping_cart_item WHERE id_shopping_cart = $cartId AND id_item = $itemId";
-    $result = $db->query($sql);
-    $item = $result->fetch_assoc();
-
-    if ($item) {
-        if ($is_update) {
-            $sql = "UPDATE shopping_cart_item SET amount = $quantity WHERE id_shopping_cart = $cartId AND id_item = $itemId";
-        } else {
-            $sql = "UPDATE shopping_cart_item SET amount = amount + $quantity WHERE id_shopping_cart = $cartId AND id_item = $itemId";
-        }
-        $db->query($sql);
-    } else {
-        $sql = "INSERT INTO shopping_cart_item (id_shopping_cart, id_item, amount) VALUES ($cartId, $itemId, $quantity)";
-        $db->query($sql);
-    }
-}
-
-function mergeSessionCart($userId, $sessionCart)
-{
-    $cartId = getShoppingCartId($userId);
-    foreach ($sessionCart as $item) {
-        addOrUpdateCartItem($cartId, $item['id_item'], $item['amount']);
-    }
-}
-
-function getSessionCartItems()
-{
-    return $_SESSION['shoppingCart'] ?? [];
-}
-
-function setSessionCartItems($items)
-{
-    $_SESSION['shoppingCart'] = $items;
-}
-
-$sessionCart = getSessionCartItems();
-
+$shoppingCart = null;
+$userData = null;
 if ($auth->isLoggedIn()) {
     $userData = $auth->getLoggedInUserData();
     $userId = $userData['id_user'];
-    mergeSessionCart($userId, $sessionCart);
-    setSessionCartItems([]);
-    $cartId = getShoppingCartId($userId);
-    $shoppingCart = getCartItemsWithDetails($cartId);
+    $shoppingCart = $shoppingCartService->getCartItems($userId);
 } else {
-    $shoppingCart = [];
-    foreach ($sessionCart as $item) {
-        $db = getDbConnection();
-        $sql = "SELECT id_item, name, price, description FROM item WHERE id_item = " . (int)$item['id_item'];
-        $result = $db->query($sql);
-        $product = $result->fetch_assoc();
+    $shoppingCart = $shoppingCartService->getSessionCartItems();
+}
 
-        if ($product) {
-            $shoppingCart[] = [
-                'id_item' => $product['id_item'],
-                'name' => $product['name'],
-                'price' => $product['price'],
-                'description' => $product['description'],
-                'amount' => $item['amount']
-            ];
-        }
-    }
+if ($shoppingCart === null) {
+    $shoppingCart = [];
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Add or update item in cart
     if (isset($_POST['id_item']) && isset($_POST['amount']) && is_numeric($_POST['amount']) && $_POST['amount'] > 0) {
         $itemId = (int)$_POST['id_item'];
         $quantity = (int)$_POST['amount'];
@@ -108,51 +25,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($auth->isLoggedIn()) {
             $userData = $auth->getLoggedInUserData();
             $userId = $userData['id_user'];
-            $cartId = getShoppingCartId($userId);
-            addOrUpdateCartItem($cartId, $itemId, $quantity, isset($_POST['is_update']));
-            $shoppingCart = getCartItemsWithDetails($cartId);
+            $isUpdate = isset($_POST['is_update']);
+            $shoppingCartService->addItemToCart($userId, $itemId, $quantity, $isUpdate);
+            $shoppingCart = $shoppingCartService->getCartItems($userId);
         } else {
-            $sessionCart = getSessionCartItems();
-            $exists = false;
-            foreach ($sessionCart as &$item) {
-                if ($item['id_item'] == $itemId) {
-                    if (isset($_POST['is_update'])) {
-                        $item['amount'] = $quantity;
-                    } else {
-                        $item['amount'] += $quantity;
-                    }
-                    $exists = true;
-                    break;
-                }
+            $isUpdate = isset($_POST['is_update']);
+            if ($isUpdate) {
+                $shoppingCartService->updateSessionCartItem($itemId, $quantity);
+            } else {
+                $shoppingCartService->addToSessionCart($itemId, $quantity);
             }
-            if (!$exists) {
-                $sessionCart[] = ['id_item' => $itemId, 'amount' => $quantity];
-            }
-            setSessionCartItems($sessionCart);
-            $shoppingCart = $sessionCart;
+            $shoppingCart = $shoppingCartService->getSessionCartItems();
         }
     }
 
     if (isset($_POST['action']) && $_POST['action'] === 'remove' && isset($_POST['id_item'])) {
         $itemIdToRemove = (int)$_POST['id_item'];
+
         if ($auth->isLoggedIn()) {
             $userData = $auth->getLoggedInUserData();
             $userId = $userData['id_user'];
-            $cartId = getShoppingCartId($userId);
-
-            $sql = "DELETE FROM shopping_cart_item WHERE id_shopping_cart = $cartId AND id_item = $itemIdToRemove";
-            getDbConnection()->query($sql);
-
-            $shoppingCart = getCartItemsWithDetails($cartId);
+            $shoppingCartService->removeItemFromCart($userId, $itemIdToRemove);
+            $shoppingCart = $shoppingCartService->getCartItems($userId);
         } else {
-            foreach ($sessionCart as $key => $item) {
-                if ($item['id_item'] == $itemIdToRemove) {
-                    unset($sessionCart[$key]);
-                    break;
-                }
-            }
-            setSessionCartItems($sessionCart);
-            $shoppingCart = $sessionCart;
+            $shoppingCartService->removeSessionCartItem($itemIdToRemove);
+            $shoppingCart = $shoppingCartService->getSessionCartItems();
         }
     }
 
@@ -317,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         .sidebar .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 4px;
         }
 
         input, select {
@@ -377,14 +274,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-position: left center;
         }
 
-        .delivery-method select option[data-icon="postnl"] {
-            background-image: url('path_to_postnl_icon.png');
-        }
-
-        .delivery-method select option[data-icon="dhl"] {
-            background-image: url('path_to_dhl_icon.png');
-        }
-
     </style>
 </head>
 <body>
@@ -413,55 +302,125 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <button type="submit" name="action" value="update">Update</button>
                         <button type="submit" name="action" value="remove" class="remove-btn">Remove</button>
                     </form>
-
-
                 </div>
             </div>
         <?php endforeach; ?>
     </div>
-
     <div class="sidebar">
         <h1>Betaling en Bezorging</h1>
-        <div class="form-group">
-            <label for="address">Adres</label>
-            <input type="text" id="address" name="address" placeholder="Vul uw adres in">
-        </div>
+        <form action="/order-confirmation" method="POST">
+            <div class="form-group">
+                <label for="address">Straat</label>
+                <input
+                        type="text"
+                        id="address"
+                        name="address"
+                        value="<?= $userData ? htmlspecialchars($userData['address']) : '' ?>"
+                        placeholder="Vul uw straat in"
+                    <?= $userData ? 'readonly' : 'required' ?>
+                        autocomplete="shipping address-line1">
+            </div>
 
-        <div class="payment-method">
-            <label for="payment">Betaling Methode</label>
-            <select id="payment" name="payment">
-                <option value="creditcard" data-icon="creditcard">Creditcard</option>
-                <option value="paypal" data-icon="paypal">PayPal</option>
-                <option value="ideal" data-icon="ideal">iDEAL</option>
-            </select>
-            <img src="/assets/images/creditcard.png" class="payment-icon" alt="Payment Icon">
-        </div>
+            <div class="form-group">
+                <label for="house_number">Huisnummer</label>
+                <input
+                        type="number"
+                        id="house_number"
+                        name="house_number"
+                        value="<?= $userData ? htmlspecialchars($userData['house_number']) : '' ?>"
+                        placeholder="Vul uw huisnummer in"
+                    <?= $userData ? 'readonly' : 'required' ?>
+                        autocomplete="shipping address-line2">
+            </div>
 
-        <div class="delivery-method">
-            <label for="delivery">Bezorg Methode</label>
-            <select id="delivery" name="delivery">
-                <option value="pickup" data-icon="pickup">Afhalen</option>
-                <option value="postnl" data-icon="postnl">PostNL</option>
-                <option value="dhl" data-icon="dhl">DHL</option>
-            </select>
-            <img src="/assets/images/winkel.png" class="delivery-icon" alt="Delivery Icon">
-        </div>
+            <div class="form-group">
+                <label for="zip_code">Postcode</label>
+                <input
+                        type="text"
+                        id="zip_code"
+                        name="zip_code"
+                        value="<?= $userData ? htmlspecialchars($userData['zip_code']) : '' ?>"
+                        placeholder="Vul uw postcode in"
+                    <?= $userData ? 'readonly' : 'required' ?>
+                        autocomplete="shipping postal-code">
+            </div>
 
-        <div class="form-group">
-            <label for="coupon">Kortingscode</label>
-            <input type="text" id="coupon" name="coupon" placeholder="Voer kortingscode in">
-        </div>
+            <div class="form-group">
+                <label for="city">Stad</label>
+                <input
+                        type="text"
+                        id="city"
+                        name="city"
+                        value="<?= $userData ? htmlspecialchars($userData['city']) : '' ?>"
+                        placeholder="Vul uw stad in"
+                    <?= $userData ? 'readonly' : 'required' ?>
+                        autocomplete="shipping address-level2">
+            </div>
 
-        <button class="coupon-btn">Kortingscode toepassen</button>
+            <div class="form-group">
+                <label for="country">Land</label>
+                <input
+                        type="text"
+                        id="country"
+                        name="country"
+                        value="<?= $userData ? htmlspecialchars($userData['country']) : '' ?>"
+                        placeholder="Vul uw land in"
+                    <?= $userData ? 'readonly' : 'required' ?>
+                        autocomplete="shipping country">
+            </div>
 
-        <div class="summary">
-            <p>Subtotaal: €<?= number_format($subtotal, 2) ?></p>
-            <p>BTW (21%): €<?= number_format($subtotal * 0.21, 2) ?></p>
-            <p class="total-price">Totaal: €<?= number_format($subtotal * 1.21, 2) ?></p>
+            <div class="form-group">
+                <label for="email">E-mailadres</label>
+                <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value="<?= $userData ? htmlspecialchars($userData['email_address']) : '' ?>"
+                        placeholder="Vul uw e-mailadres in"
+                    <?= $userData ? 'readonly' : 'required' ?>
+                        autocomplete="email">
+            </div>
 
-            <button class="order-btn">Bestelling Plaatsen</button>
-        </div>
+            <div class="payment-method">
+                <label for="payment">Betaling Methode</label>
+                <select id="payment" name="payment" autocomplete="off">
+                    <option value="creditcard" data-icon="creditcard">Creditcard</option>
+                    <option value="paypal" data-icon="paypal">PayPal</option>
+                    <option value="ideal" data-icon="ideal">iDEAL</option>
+                </select>
+                <img src="/assets/images/creditcard.png" class="payment-icon" alt="Payment Icon">
+            </div>
+
+            <div class="delivery-method">
+                <label for="delivery">Bezorg Methode</label>
+                <select id="delivery" name="delivery" autocomplete="off">
+                    <option value="pickup" data-icon="pickup">Afhalen</option>
+                    <option value="postnl" data-icon="postnl">PostNL</option>
+                    <option value="dhl" data-icon="dhl">DHL</option>
+                </select>
+                <img src="/assets/images/winkel.png" class="delivery-icon" alt="Delivery Icon">
+            </div>
+
+            <div class="form-group">
+                <label for="coupon">Kortingscode</label>
+                <input type="text" id="coupon" name="coupon" placeholder="Voer kortingscode in">
+            </div>
+
+            <div class="summary">
+                <?php
+                $subtotalWithoutVAT = $subtotal / 1.21;
+                $vatAmount = $subtotal - $subtotalWithoutVAT;
+                ?>
+
+                <p>Subtotaal (excl. BTW): €<?= number_format($subtotalWithoutVAT, 2) ?></p>
+                <p>BTW (21%): €<?= number_format($vatAmount, 2) ?></p>
+                <p class="total-price">Totaal (incl. BTW): €<?= number_format($subtotal, 2) ?></p>
+            </div>
+
+            <button type="submit" class="order-btn">Bestelling Plaatsen</button>
+        </form>
     </div>
+
 </div>
 
 <script>
