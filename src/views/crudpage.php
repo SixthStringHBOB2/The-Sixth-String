@@ -1,8 +1,6 @@
 <?php
-session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-include 'database/db.php';
 
 $dbconnection = getDbConnection();
 $sqlGetAllItems = "SELECT * FROM item i WHERE i.isActive = 1 OR i.isActive IS NULL";

@@ -61,21 +61,30 @@ $router->post('/order-confirmation',  function () use ($auth, $shoppingCartServi
 });
 
 
-$router->get('/dashboard', function () {
+$router->get('/dashboard', function () use ($auth) {
+    if (!$auth->isAdminLogin()) {
+        header('Location: /');
+        exit;
+    }
     include 'views/dashboard.php';
-});
+}, true);
 
-$router->get('/purchase', function () {
-    include 'views/purchase.php';
-});
-
-$router->get('/crudpage', function () {
+$router->get('/crudpage', function () use ($auth) {
+    if (!$auth->isAdminLogin()) {
+        header('Location: /');
+        exit;
+    }
     include 'views/crudpage.php';
-});
+}, true);
 
-$router->post('/crudpage', function () {
+$router->post('/crudpage', function () use ($auth) {
+    if (!$auth->isAdminLogin()) {
+        header('Location: /');
+        exit;
+    }
     include 'views/crudpage.php';
-});
+}, true);
+
 
 $router->serveStatic($_SERVER['REQUEST_URI'], __DIR__);
 

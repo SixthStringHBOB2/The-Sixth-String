@@ -2,7 +2,6 @@
 
 session_start();
 include 'database/db.php';
-
 class Auth
 {
     private $pdo;
@@ -54,7 +53,6 @@ class Auth
         }
     }
 
-
     public function login($email, $password)
     {
         $stmt = $this->pdo->prepare('SELECT * FROM user WHERE email_address = ?');
@@ -80,12 +78,18 @@ class Auth
         return false;
     }
 
+    public function isAdminLogin(): bool
+    {
+        return isset($_SESSION['user']) && $_SESSION['user']['is_admin'] == 1;
+    }
+
     public function isLoggedIn(): bool
     {
         return isset($_SESSION['user']);
     }
 
-    public function getLoggedInUserData() {
+    public function getLoggedInUserData()
+    {
         $userId = $_SESSION['user']['id'];
         $stmt = $this->pdo->prepare('SELECT * FROM user WHERE id_user = ?');
         $stmt->bind_param('i', $userId);
@@ -93,7 +97,6 @@ class Auth
         $result = $stmt->get_result();
         return $result->fetch_assoc();
     }
-
 
     public function getLoggedInUserName()
     {
