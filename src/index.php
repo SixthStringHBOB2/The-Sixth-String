@@ -9,7 +9,7 @@ $auth = new Auth();
 $shoppingCartService = new ShoppingCartService($auth, getDbConnection());
 $router = new Router('/', $auth);
 
-$router->get('/', function () {
+$router->get('/', function () use ($shoppingCartService) {
     include 'views/home.php';
 });
 

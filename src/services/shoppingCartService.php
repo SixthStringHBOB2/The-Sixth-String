@@ -84,15 +84,25 @@ class ShoppingCartService
         }
     }
 
-    public function getCartCount($userId)
+    public function getCartCount()
     {
-        $cartId = $this->getShoppingCartId($userId);
-        $sql = "SELECT SUM(amount) as total_items FROM shopping_cart_item WHERE id_shopping_cart = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("i", $cartId);
-        $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
-        return $result['total_items'] ?? 0;
+        if ($this->auth->isLoggedIn()) {
+            $userId = $this->auth->getUserId();
+            $cartId = $this->getShoppingCartId($userId);
+            $sql = "SELECT SUM(amount) AS total_items FROM shopping_cart_item WHERE id_shopping_cart = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $cartId);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+            return isset($result['total_items']) ? $result['total_items'] : 0;
+        } else {
+            $cartItems = $this->getSessionCartItems();
+            $totalItems = 0;
+            foreach ($cartItems as $item) {
+                $totalItems += $item['amount'];
+            }
+            return $totalItems;
+        }
     }
 
     public function addItemToCart($userId, $itemId, $amount, $isUpdate = false)
