@@ -15,20 +15,45 @@ class Auth
     public function register($firstName, $lastName, $email, $password, $address, $city, $houseNumber, $zipCode, $country)
     {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $this->pdo->prepare(
-            'INSERT INTO user (first_name, last_name, email_address, password, address, city, house_number, zip_code, country, is_admin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        );
 
-        if (!$stmt) {
-            die("Error preparing statement: " . $this->pdo->error);
-        }
+        $this->pdo->beginTransaction();
 
-        $executeResult = $stmt->execute([$firstName, $lastName, $email, $hashedPassword, $address, $city, $houseNumber, $zipCode, $country, 0]);
+        try {
+            $stmt = $this->pdo->prepare(
+                'INSERT INTO user (first_name, last_name, email_address, password, address, city, house_number, zip_code, country, is_admin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            );
 
-        if (!$executeResult) {
-            die("Error executing statement: " . $stmt->error);
+            if (!$stmt) {
+                throw new Exception("Error preparing user statement: " . $this->pdo->errorInfo()[2]);
+            }
+
+            $executeResult = $stmt->execute([$firstName, $lastName, $email, $hashedPassword, $address, $city, $houseNumber, $zipCode, $country, 0]);
+
+            if (!$executeResult) {
+                throw new Exception("Error executing user statement: " . $stmt->errorInfo()[2]);
+            }
+
+            $userId = $this->pdo->lastInsertId();
+
+            $cartStmt = $this->pdo->prepare('INSERT INTO shopping_cart (id_user) VALUES (?)');
+
+            if (!$cartStmt) {
+                throw new Exception("Error preparing cart statement: " . $this->pdo->errorInfo()[2]);
+            }
+
+            $cartExecuteResult = $cartStmt->execute([$userId]);
+
+            if (!$cartExecuteResult) {
+                throw new Exception("Error executing cart statement: " . $cartStmt->errorInfo()[2]);
+            }
+
+            $this->pdo->commit();
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            die("Registration failed: " . $e->getMessage());
         }
     }
+
 
     public function login($email, $password)
     {
