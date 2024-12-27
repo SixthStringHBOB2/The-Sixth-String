@@ -1,16 +1,5 @@
 <?php
-include '../database/db.php';
 
-function debug_to_console($data)
-{
-    $output = $data;
-    if (is_array($output))
-        $output = implode(',', $output);
-
-    echo "<script>console.log('Debug Objects: " . $output . "' );</script>";
-}
-
-// URL Params
 $selectedBrands = isset($_GET['brands']) ? explode(',', $_GET['brands']) : [];
 $selectedBrands = array_map(function ($brands) {
     return (int)ltrim($brands, 'b');
@@ -101,6 +90,32 @@ try {
     echo "Error: " . $e->getMessage();
     exit();
 }
+
+$isLoggedIn = isset($auth) && $auth->isLoggedIn();
+$sessionCart = [];
+if ($isLoggedIn) {
+    $userData = $auth->getLoggedInUserData();
+    $userId = $userData['id_user'];
+    $shoppingCartService = new ShoppingCartService($auth, $mysqli);
+    $sessionCart = $shoppingCartService->getCartItems($userId);
+} else {
+    $shoppingCartService = new ShoppingCartService($auth, $mysqli);
+    $sessionCart = $shoppingCartService->getSessionCartItems();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
+    $itemId = (int)$_POST['id_item'];
+    $amount = (int)$_POST['amount'];
+
+    if ($isLoggedIn) {
+        $shoppingCartService->addItemToCart($userId, $itemId, $amount);
+    } else {
+        $shoppingCartService->addToSessionCart($itemId, $amount);
+    }
+    header("Location: " . $_SERVER['REQUEST_URI']);
+    exit();
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -186,12 +201,28 @@ try {
             align-self: center;
             cursor: pointer;
             justify-content: center;
+            position: relative;
         }
 
         .product .shopping-basket img {
             width: 24px;
             height: 24px;
             align-self: center;
+        }
+
+        .product .item-count {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #FF5733;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .stars {
@@ -244,7 +275,6 @@ try {
     </style>
 </head>
 <body>
-<!-- TODO: add header -->
 
 <div class="container">
     <!-- Filter selection -->
@@ -523,15 +553,34 @@ try {
                     <div class="container" style="justify-content: space-between">
                         <div style="flex-direction: column">
                             <h4>
-                                <a style="width: max-content" href="/products/<?= $product['id_item'] ?>">
+                                <a href="/products/<?= $product['id_item'] ?>">
                                     <?= htmlspecialchars($product['name']) ?>
                                 </a>
                             </h4>
                             <p class="price">€<?= number_format($product['price'], 2) ?></p>
                         </div>
-                        <button class="shopping-basket">
-                            <img src="../public/images/shoppingbasket.png" alt="Add to Basket">
-                        </button>
+
+                        <?php
+                        $item_count = 0;
+                        foreach ($sessionCart as $cartItem) {
+                            if ($cartItem['id_item'] == $product['id_item']) {
+                                $item_count = $cartItem['amount'];
+                                break;
+                            }
+                        }
+                        ?>
+
+                        <form method="POST" action="/products" style="display:inline;">
+                            <input type="text" name="id_item" value="<?= $product['id_item'] ?>" hidden>
+                            <input type="number" name="amount" value="1" style="width: 40px;" hidden>
+                            <input type="hidden" name="price" value="<?= $product['price'] ?>">
+                            <button type="submit" name="add_to_cart" class="shopping-basket">
+                                <img src="/assets/images/shoppingbasket.png" alt="Add to Basket">
+                                <?php if ($item_count > 0): ?>
+                                    <div class="item-count"><?= $item_count ?></div>
+                                <?php endif; ?>
+                            </button>
+                        </form>
                     </div>
                     <p>
                         <span class="stars" style="--rating: <?= number_format($product['avg_rating'], 1) ?>;"></span>
@@ -552,6 +601,5 @@ try {
     </div>
 </div>
 
-<!-- TODO: add footer -->
 </body>
 </html>

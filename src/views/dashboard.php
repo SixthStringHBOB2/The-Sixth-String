@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversion Ratio</title>
+    <title>Conversieratio</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 <?php
 // Database credentials
-include '../database/db.php';
-
 try {
     // Establish connection
     $mysqli = getDbConnection();
@@ -68,6 +67,18 @@ SQL;
     // Execute the query
     $conversion = $mysqli->query($conversionRatio);
 
+    // Prepare data for graphs
+    $log_dates = [];
+    $conversion_ratios = [];
+    $percentage_changes = [];
+
+    if ($conversion) {
+        foreach ($conversion as $row) {
+            $log_dates[] = $row['log_date'];
+            $conversion_ratios[] = $row['conversion_ratio'];
+            $percentage_changes[] = $row['percentage_change'] ?? null;
+        }
+    }
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage();
     exit();
@@ -76,32 +87,113 @@ SQL;
 
 <div class="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
     <div class="mx-auto max-w-3xl text-center">
-        <h2 class="text-3xl font-bold text-gray-900 sm:text-4xl">Conversion ratio</h2>
+        <h2 class="text-3xl font-bold text-gray-900 sm:text-4xl">Conversieratio</h2>
 
         <p class="mt-4 text-gray-500 sm:text-xl">
-            View daily conversion ratios.
+            Bekijk dagelijkse conversieratio's.
         </p>
     </div>
 
     <dl class="mt-6 grid grid-cols-1 gap-4 sm:mt-8 sm:grid-cols-2 lg:grid-cols-4">
-        <!--        Creates a div per data point-->
-        <?php if (isset($conversion)): ?>
+        <?php if (!empty($log_dates)): ?>
             <?php foreach ($conversion as $row): ?>
                 <div class="flex flex-col rounded-lg border border-gray-100 px-4 py-8 text-center">
                     <dt class="order-last text-lg font-medium text-gray-500">
-                        Date: <?php echo htmlspecialchars($row['log_date']); ?></dt>
-                    <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl"><?php echo number_format($row['conversion_ratio'], 2); ?>
-                        %
+                        Datum: <?php echo htmlspecialchars($row['log_date']); ?></dt>
+                    <dd class="text-4xl font-extrabold text-blue-600 md:text-5xl">
+                        <?php echo number_format($row['conversion_ratio'], 2); ?>%
                     </dd>
                     <p class="mt-2 text-gray-500">
-                        Change: <?php echo $row['percentage_change'] ? number_format($row['percentage_change'], 2) . '%' : 'N/A'; ?>
+                        Verandering: <?php echo $row['percentage_change'] ? number_format($row['percentage_change'], 2) . '%' : 'N/B'; ?>
                     </p>
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <p class="text-center text-gray-500">Not enough data available.</p>
+            <p class="text-center text-gray-500">Niet genoeg data beschikbaar.</p>
         <?php endif; ?>
     </dl>
+
+    <div class="mt-12">
+        <h3 class="text-2xl font-bold text-gray-900 sm:text-3xl text-center">Grafieken</h3>
+
+        <div class="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <!-- Graph 1: Daily Conversion Ratio -->
+            <div class="flex flex-col rounded-lg border border-gray-100 px-4 py-8 text-center">
+                <canvas id="conversionRatioChart"></canvas>
+            </div>
+
+            <!-- Graph 2: Percentage Change -->
+            <div class="flex flex-col rounded-lg border border-gray-100 px-4 py-8 text-center">
+                <canvas id="percentageChangeChart"></canvas>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+    // Data for graphs
+    const logDates = <?php echo json_encode($log_dates); ?>;
+    const conversionRatios = <?php echo json_encode($conversion_ratios); ?>;
+    const percentageChanges = <?php echo json_encode($percentage_changes); ?>;
+
+    // Graph 1: Daily Conversion Ratio
+    new Chart(document.getElementById('conversionRatioChart'), {
+        type: 'line',
+        data: {
+            labels: logDates,
+            datasets: [{
+                label: 'Dagelijkse Conversieratio (%)',
+                data: conversionRatios,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Dagelijkse Conversieratio'
+                }
+            }
+        }
+    });
+
+    // Graph 2: Percentage Change
+    new Chart(document.getElementById('percentageChangeChart'), {
+        type: 'bar',
+        data: {
+            labels: logDates,
+            datasets: [{
+                label: 'Procentuele Verandering (%)',
+                data: percentageChanges,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Dagelijkse Procentuele Verandering'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
 </body>
 </html>

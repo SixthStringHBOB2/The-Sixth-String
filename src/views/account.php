@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($userName); ?></title>
     <link rel="stylesheet" href="/assets/css/account.css">
+    <style>
+        .admin-links a {
+            color: red;
+            text-decoration: none;
+        }
+        .admin-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
 
@@ -16,10 +25,23 @@
             <li><a href="/orders">Bestellingen</a></li>
             <li><a href="/logout">Uitloggen</a></li>
         </ul>
+
+        <?php if ($auth->isAdminLogin()): ?>
+            <h3>Admin</h3>
+            <ul class="admin-links">
+                <li><a href="/crudpage">CRUD Pagina</a></li>
+                <li><a href="/dashboard">Dashboard</a></li>
+            </ul>
+        <?php endif; ?>
     </div>
 
     <div class="account-content">
-        <h1>Welkom, <?php echo htmlspecialchars($userName); ?>!</h1>
+        <h1>
+            <?php if ($auth->isAdminLogin()): ?>
+                <span class="admin-badge">Admin</span>
+            <?php endif; ?>
+            Welkom, <?php echo htmlspecialchars($userName); ?>!
+        </h1>
         <div class="user-info">
             <h2>Uw Persoonlijke Gegevens</h2>
             <p><strong>E-mail:</strong> <?php echo htmlspecialchars($userData['email_address']); ?></p>

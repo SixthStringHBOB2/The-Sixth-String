@@ -21,8 +21,15 @@
 
     <div class="account-content">
         <?php
+        $userData = $auth->getLoggedInUserData();
+
+        if (!$userData || !isset($userData['id_user'])) {
+            echo "<p>User not logged in.</p>";
+            exit;
+        }
+
         $mysqli = getDbConnection();
-        $userId = $_SESSION['user']['id'];
+        $userId = $userData['id_user'];
         $orderId = $_GET['id'];
 
         $query = "
@@ -37,8 +44,12 @@
         $stmt->execute();
 
         $result = $stmt->get_result();
-
         $order = $result->fetch_assoc();
+
+        if (!$order) {
+            echo "<p>Order not found.</p>";
+            exit;
+        }
 
         $itemQuery = "
             SELECT oi.*, i.name AS item_name 
@@ -47,15 +58,12 @@
             WHERE oi.id_order = ?
         ";
 
-        // Prepare the item query
         $itemStmt = $mysqli->prepare($itemQuery);
         $itemStmt->bind_param("i", $orderId);
         $itemStmt->execute();
 
-        // Get the result set for items
         $itemResult = $itemStmt->get_result();
 
-        // Fetch all items
         $items = [];
         while ($item = $itemResult->fetch_assoc()) {
             $items[] = $item;

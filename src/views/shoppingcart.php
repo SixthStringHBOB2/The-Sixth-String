@@ -1,275 +1,493 @@
-<HTML>
-
 <?php
-//session_start();
-include  'database/db.php';
-$userLoggedIn = 1;
-$_SESSION['LoggedInUser'] = 393;
-$current_datetime = date('Y-m-d H:i:s');
-$shoppingCartId = ""; // is set later in the first function, might seem abit weird but idk it works.
 
-// dummy products, this is how we expect it to be stored in the session. Everything should be a variable so id1 and product 1 are varibale. The number at the end is how much the customer wants
-// this is only there so people have an example of how we expect it to be stored, if you uncomment below it makes the site buggy af lol
-$_SESSION['shoppingCart'] = [];
+$sessionCart = $shoppingCartService->getSessionCartItems();
 
-$_SESSION['shoppingCart'] = [
-    2 => [2, "product 1", "15,50", 1],
-    3 => [3, "product 2", "15,50", 1],
-    4 => [4, "product 3", "15,50", 1],
-];
-
-if(isset($_SESSION['LoggedInUser'])){
-    $dbConnection = getDbConnection();
-    $userId = $_SESSION['LoggedInUser'];
-    $query = "SELECT sci.amount, sci.id_item, i.`name`, i.price, sci.id_shopping_cart
-                FROM shopping_cart sc
-                LEFT JOIN shopping_cart_item sci ON sc.id_shopping_cart = sci.id_shopping_cart
-                LEFT JOIN item i ON sci.id_item = i.id_item
-                WHERE sc.id_user = $userId";
-
-    $queryResult = mysqli_query($dbConnection, $query);
-
-
-    if (!$queryResult) {
-        die("Query failed: " . mysqli_error($dbConnection));
-    }
-    if($queryResult->num_rows > 1){
-        while ($row = mysqli_fetch_assoc($queryResult)) {
-            $itemId = $row['id_item'];
-            $itemName = $row['name'];
-            $itemPrice = number_format($row['price']);
-            $itemAmount = $row['amount'];
-
-            $shoppingCartId = $row['id_shopping_cart'];
-
-            // Add the item to the shopping cart session
-            if(!isset($_SESSION['shoppingCart'][$itemId])){
-                $_SESSION['shoppingCart'][$itemId] = [
-                    $itemId,
-                    $itemName,
-                    $itemPrice,
-                    $itemAmount
-                ];
-
-            }else{
-                $_SESSION['shoppingCart'][$itemId][3] + $itemAmount;
-            }
-        }
-    } else{
-        $sql = "SELECT id_shopping_cart FROM shopping_cart WHERE id_user = $userId";
-        $result = mysqli_query($dbConnection, $sql);
-        $shoppingCartId = ($row = mysqli_fetch_assoc($result)) ? $row['id_shopping_cart'] : null;
-        mysqli_close($dbConnection);
-
-    }
+$shoppingCart = null;
+$userData = null;
+if ($auth->isLoggedIn()) {
+    $userData = $auth->getLoggedInUserData();
+    $userId = $userData['id_user'];
+    $shoppingCart = $shoppingCartService->getCartItems($userId);
+} else {
+    $shoppingCart = $shoppingCartService->getSessionCartItems();
 }
 
-//Code below updates the amount the customer wants to buy to the php session variable
-//it gets the value from the hidden input field which is being updated with js
+if ($shoppingCart === null) {
+    $shoppingCart = [];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['formType'])) {
-        if ($_POST['formType'] === 'purchaseCart' && isset($_POST['amounts'])) {
-            $dbConnection = getDbConnection();
-            foreach ($_POST['amounts'] as $productId => $amount) {
-                // Update the shopping cart amount and check if db also need to be updated, if so then do so
-                if (isset($_SESSION['shoppingCart'][$productId])) {
-                    if ($amount > 0) {
-                        $_SESSION['shoppingCart'][$productId][3] = $amount;
-                        if (isset($_SESSION['LoggedInUser'])) {
-                            $sqlcheckIfItemInDbShoppingCartExsist = "SELECT sci.id_item
-                                                        FROM shopping_cart_item sci
-                                                        LEFT JOIN shopping_cart sc ON sci.id_shopping_cart = sc.id_shopping_cart
-                                                        WHERE sc.id_user = $userId";
+    // Add or update item in cart
+    if (isset($_POST['id_item']) && isset($_POST['amount']) && is_numeric($_POST['amount']) && $_POST['amount'] > 0) {
+        $itemId = (int)$_POST['id_item'];
+        $quantity = (int)$_POST['amount'];
 
-                            $checkIfItemInDbExsist = mysqli_query($dbConnection, $sqlcheckIfItemInDbShoppingCartExsist);
-
-                            if ($checkIfItemInDbExsist->num_rows <= 1) {
-                                while ($product = current($_SESSION['shoppingCart'])) {
-                                    $productId = $product[0];
-                                    $amount = $product[3];
-                                    echo $amount;
-                                    echo "<br>";
-
-                                    // Insert into shopping_cart_item
-                                    $sqlInsert = "INSERT INTO shopping_cart_item (id_shopping_cart, id_item, amount)
-                                    VALUES ($shoppingCartId, $productId, $amount)";
-                                    echo $shoppingCartId;
-                                    mysqli_query($dbConnection, $sqlInsert);
-
-                                    // Move to the next item in the array
-                                    next($_SESSION['shoppingCart']);
-                                }
-                            }
-                            $sqlUpdateShoppingCartItemAmount = "UPDATE shopping_cart_item
-                                                                SET amount = $amount
-                                                                WHERE id_shopping_cart = $shoppingCartId 
-                                                                AND id_item = $productId";
-
-                            mysqli_query($dbConnection, $sqlUpdateShoppingCartItemAmount);
-                        }
-                        // Update the amount in session
-                    } else {
-                        if (isset($_SESSION['LoggedInUser'])) {
-                            $productId = $_SESSION['shoppingCart'][$productId][0];
-                            $userId = $_SESSION['LoggedInUser'];
-                            $sqlQueryToDeleteFromShoppingCart = "
-                                DELETE sci
-                                FROM shopping_cart_item sci
-                                JOIN shopping_cart sc ON sc.id_shopping_cart = sci.id_shopping_cart
-                                WHERE sci.id_item = $productId AND sc.id_user = $userId";
-
-                            mysqli_query($dbConnection, $sqlQueryToDeleteFromShoppingCart);
-                        }
-                        unset($_SESSION['shoppingCart'][$productId]);  // Remove product from session if amount is 0
-                    }
-                }
+        if ($auth->isLoggedIn()) {
+            $userData = $auth->getLoggedInUserData();
+            $userId = $userData['id_user'];
+            $isUpdate = isset($_POST['is_update']);
+            $shoppingCartService->addItemToCart($userId, $itemId, $quantity, $isUpdate);
+            $shoppingCart = $shoppingCartService->getCartItems($userId);
+        } else {
+            $isUpdate = isset($_POST['is_update']);
+            if ($isUpdate) {
+                $shoppingCartService->updateSessionCartItem($itemId, $quantity);
+            } else {
+                $shoppingCartService->addToSessionCart($itemId, $quantity);
             }
+            $shoppingCart = $shoppingCartService->getSessionCartItems();
         }
     }
-}
-// update the database
-if (isset($_POST['PurchaseButton2'])) {
-    $dbConnection = getDbConnection();
-    if (isset($_SESSION['LoggedInUser'])) {
-        //create order
-        $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status, id_user) VALUES ('$current_datetime', 1, $userId)"; // the status is set to 1 for now, this is the happy flow
-        mysqli_query($dbConnection, $sqlCreateOrder);
 
-        //get created order id
-        $lastInsertedId = mysqli_insert_id($dbConnection);
-        createOrderDetail($lastInsertedId);
-    }else{
-        $sqlCreateOrder = "INSERT INTO `order` (order_date, id_status, id_user) VALUES ('$current_datetime', 1, 1)"; // the status is set to 1 for now, this is the happy flow
-        // the id_user is set to 1, de database always expect a user so id_user is now a geust user for people without an account
-        mysqli_query($dbConnection, $sqlCreateOrder);
+    if (isset($_POST['action']) && $_POST['action'] === 'remove' && isset($_POST['id_item'])) {
+        $itemIdToRemove = (int)$_POST['id_item'];
 
-        //get created order id
-        $lastInsertedId = mysqli_insert_id($dbConnection);
-        createOrderDetail($lastInsertedId);
-        // clear the shopping_cart_item table after purchase is done
+        if ($auth->isLoggedIn()) {
+            $userData = $auth->getLoggedInUserData();
+            $userId = $userData['id_user'];
+            $shoppingCartService->removeItemFromCart($userId, $itemIdToRemove);
+            $shoppingCart = $shoppingCartService->getCartItems($userId);
+        } else {
+            $shoppingCartService->removeSessionCartItem($itemIdToRemove);
+            $shoppingCart = $shoppingCartService->getSessionCartItems();
+        }
     }
-    clearShoppingCart();
-    mysqli_close($dbConnection);
-}
 
-
-function clearShoppingCart(){
-    if($_SESSION['LoggedInUser']){
-        $userId = $_SESSION['LoggedInUser'];
-        $dbconnection = getDbConnection();
-
-        $sqlDeleteItems = "DELETE sci
-                       FROM shopping_cart_item sci
-                       LEFT JOIN shopping_cart sc ON sc.id_shopping_cart = sci.id_shopping_cart
-                       WHERE sc.id_user = $userId";
-
-
-        mysqli_query($dbconnection, $sqlDeleteItems);
-        mysqli_close($dbconnection);
-    } else{
-        unset($_SESSION['shoppingCart']);
-        echo "done";
-    }
-}
-
-function createOrderDetail($lastInsertedId){
-    $dbConnection = getDbConnection();
-    foreach ($_SESSION['shoppingCart'] as $product) {
-        $productId = $product[0];
-        $amount = $product[3];
-
-        $sqlCreateOrderDetail = "INSERT INTO order_detail (amount, id_item, id_order) VALUES ($amount, $productId, $lastInsertedId)";
-
-        mysqli_query($dbConnection, $sqlCreateOrderDetail);
-    }
-    mysqli_close($dbConnection);
+    $referer = $_SERVER['HTTP_REFERER'] ?? '/products';
+    header('Location: ' . $referer);
+    exit;
 }
 
 ?>
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winkelwagentje</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            background-color: #D9D9D9;
+        }
+
+        .cart-container {
+            width: 70%;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .cart-items, .sidebar {
+            width: 48%;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-items h1, .sidebar h1 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .cart-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-item img {
+            width: 25%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .cart-item .item-details {
+            flex-grow: 1;
+            margin-left: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .cart-item .price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .cart-item .price-per-piece {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .cart-item .description {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .cart-item .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cart-item .quantity-controls input {
+            width: 50px;
+            text-align: center;
+            padding: 5px;
+        }
+
+        .cart-item button {
+            background: linear-gradient(to right, #C7914E, #61584D);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+
+        .cart-item button:hover {
+            background: linear-gradient(to right, #61584D, #C7914E);
+        }
+
+        .cart-item .remove-btn {
+            background-color: red;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+        }
+
+        .sidebar {
+            background-color: #ecf0f1;
+        }
+
+        .sidebar .coupon-input {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .sidebar .coupon-btn {
+            background: linear-gradient(to right, #C7914E, #61584D);
+            border: none;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .sidebar .coupon-btn:hover {
+            background: linear-gradient(to right, #61584D, #C7914E);
+        }
+
+        .sidebar .summary {
+            margin-top: 20px;
+        }
+
+        .sidebar .summary p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .sidebar .summary .total-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .sidebar .form-group {
+            margin-bottom: 4px;
+        }
+
+        input, select {
+            background: white;
+            width: 90%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .payment-method, .delivery-method {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .payment-method select, .delivery-method select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        .payment-method .payment-icon, .delivery-method .delivery-icon {
+            width: 65px;
+            height: 65px;
+            object-fit: contain;
+        }
+
+        .order-btn {
+            background: linear-gradient(to right, #C7914E, #61584D);
+            border: none;
+            color: white;
+            padding: 15px;
+            width: 100%;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .order-btn:hover {
+            background: linear-gradient(to right, #61584D, #C7914E);
+        }
+
+        select option {
+            padding-left: 25px;
+            background-size: 20px;
+            background-repeat: no-repeat;
+            background-position: left center;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        input[type="radio"] + label {
+            position: relative;
+            padding-left: 30px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        input[type="radio"] + label:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid #61584D;
+            background-color: white;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        input[type="radio"]:checked + label:before {
+            background-color: #61584D;
+            border-color: #C7914E;
+        }
+
+        input[type="radio"]:checked + label {
+            color: #61584D;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="cart-container">
+    <div class="cart-items">
+        <h1>Winkelwagentje</h1>
+
+        <?php
+        $subtotal = 0;
+        foreach ($shoppingCart as $item):
+            $subtotal += $item['price'] * $item['amount'];
+            ?>
+            <div class="cart-item">
+                <img src="/assets/images/product.png" alt="Product Image">
+                <div class="item-details">
+                    <h3><?= htmlspecialchars($item['name']) ?></h3>
+                    <p class="description"><?= htmlspecialchars($item['description']) ?></p>
+                    <p class="price">€<?= number_format($item['price'] * $item['amount'], 2) ?></p>
+                    <p class="price-per-piece">Per stuk: €<?= number_format($item['price'], 2) ?></p>
+
+                    <form action="" method="POST" class="quantity-controls">
+                        <input type="number" name="amount" value="<?= $item['amount'] ?>" min="1">
+                        <input type="hidden" name="id_item" value="<?= $item['id_item'] ?>">
+                        <input type="hidden" name="is_update" value="true">
+                        <button type="submit" name="action" value="update">Update</button>
+                        <button type="submit" name="action" value="remove" class="remove-btn">Remove</button>
+                    </form>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+    <div class="sidebar">
+        <h1>Betaling en Bezorging</h1>
+        <form action="/order-confirmation" method="POST">
+            <div class="form-group">
+                <label for="address">Straat</label>
+                <input
+                        type="text"
+                        id="address"
+                        name="address"
+                        value="<?= $userData ? htmlspecialchars($userData['address']) : '' ?>"
+                        placeholder="Vul uw straat in"
+                    <?= $userData ? 'readonly' : 'required' ?>
+                        autocomplete="shipping address-line1">
+            </div>
+
+            <div class="form-group">
+                <label for="house_number">Huisnummer</label>
+                <input
+                        type="number"
+                        id="house_number"
+                        name="house_number"
+                        value="<?= $userData ? htmlspecialchars($userData['house_number']) : '' ?>"
+                        placeholder="Vul uw huisnummer in"
+                    <?= $userData ? 'readonly' : 'required' ?>
+                        autocomplete="shipping address-line2">
+            </div>
+
+            <div class="form-group">
+                <label for="zip_code">Postcode</label>
+                <input
+                        type="text"
+                        id="zip_code"
+                        name="zip_code"
+                        value="<?= $userData ? htmlspecialchars($userData['zip_code']) : '' ?>"
+                        placeholder="Vul uw postcode in"
+                    <?= $userData ? 'readonly' : 'required' ?>
+                        autocomplete="shipping postal-code">
+            </div>
+
+            <div class="form-group">
+                <label for="city">Stad</label>
+                <input
+                        type="text"
+                        id="city"
+                        name="city"
+                        value="<?= $userData ? htmlspecialchars($userData['city']) : '' ?>"
+                        placeholder="Vul uw stad in"
+                    <?= $userData ? 'readonly' : 'required' ?>
+                        autocomplete="shipping address-level2">
+            </div>
+
+            <div class="form-group">
+                <label for="country">Land</label>
+                <input
+                        type="text"
+                        id="country"
+                        name="country"
+                        value="<?= $userData ? htmlspecialchars($userData['country']) : '' ?>"
+                        placeholder="Vul uw land in"
+                    <?= $userData ? 'readonly' : 'required' ?>
+                        autocomplete="shipping country">
+            </div>
+
+            <div class="form-group">
+                <label for="email">E-mailadres</label>
+                <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value="<?= $userData ? htmlspecialchars($userData['email_address']) : '' ?>"
+                        placeholder="Vul uw e-mailadres in"
+                    <?= $userData ? 'readonly' : 'required' ?>
+                        autocomplete="email">
+            </div>
+
+            <div class="payment-method">
+                <label for="payment">Betaling Methode</label>
+                <select id="payment" name="payment" autocomplete="off">
+                    <option value="creditcard" data-icon="creditcard">Creditcard</option>
+                    <option value="paypal" data-icon="paypal">PayPal</option>
+                    <option value="ideal" data-icon="ideal">iDEAL</option>
+                </select>
+                <img src="/assets/images/creditcard.png" class="payment-icon" alt="Payment Icon">
+            </div>
+
+            <div class="delivery-method">
+                <label for="delivery">Bezorg Methode</label>
+                <select id="delivery" name="delivery" autocomplete="off">
+                    <option value="pickup" data-icon="pickup">Afhalen</option>
+                    <option value="postnl" data-icon="postnl">PostNL</option>
+                    <option value="dhl" data-icon="dhl">DHL</option>
+                </select>
+                <img src="/assets/images/winkel.png" class="delivery-icon" alt="Delivery Icon">
+            </div>
+
+            <div class="form-group">
+                <label for="coupon">Kortingscode</label>
+                <input type="text" id="coupon" name="coupon" placeholder="Voer kortingscode in">
+            </div>
+
+            <div class="summary">
+                <?php
+                $subtotalWithoutVAT = $subtotal / 1.21;
+                $vatAmount = $subtotal - $subtotalWithoutVAT;
+                ?>
+
+                <p>Subtotaal (excl. BTW): €<?= number_format($subtotalWithoutVAT, 2) ?></p>
+                <p>BTW (21%): €<?= number_format($vatAmount, 2) ?></p>
+                <p class="total-price">Totaal (incl. BTW): €<?= number_format($subtotal, 2) ?></p>
+            </div>
+
+            <button type="submit" class="order-btn">Bestelling Plaatsen</button>
+        </form>
+    </div>
+
+</div>
+
 <script>
-    //TODO make the two fucntions below one
-    //code below updates the amount the customer wants to buy on the client side and the hidden input field so php can get the variable from there
-    //could also write a mapping but that is too much work... :)
-    function incrementAmount(productId) {
-        const element = document.getElementById('incrementText_' + productId);
-        const hiddenInput = document.getElementById('hiddenInput_' + productId);
-
-        if (element && hiddenInput) {
-            let value = parseInt(element.innerHTML);
-            value++;
-            element.innerHTML = value;
-            hiddenInput.value = value;
+    document.querySelector('#delivery').addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        const icon = selectedOption.getAttribute('data-icon');
+        const deliveryMethod = document.querySelector('.delivery-method .delivery-icon');
+        if (icon === 'postnl') {
+            deliveryMethod.src = '/assets/images/postnl.png';
+        } else if (icon === 'dhl') {
+            deliveryMethod.src = '/assets/images/dhl.png';
+        } else {
+            deliveryMethod.src = '/assets/images/winkel.png';
         }
-    }
-    //code below updates the amount the customer wants to buy on the client side and the hidden input field so php can get the variable from there
-    //could also write a mapping but that is too much work... :)
-    function decrementAmount(productId) {
-        const hiddenInput = document.getElementById('hiddenInput_' + productId);
-        const element = document.getElementById('incrementText_' + productId);
+    });
 
-        if (element && hiddenInput) {
-            let value = parseInt(element.innerHTML);
-            if (value > 0) {
-                value--;
-            }
-            element.innerHTML = value;
-            hiddenInput.value = value;
+    document.querySelector('#payment').addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        const icon = selectedOption.getAttribute('data-icon');
+        const deliveryMethod = document.querySelector('.payment-method .payment-icon');
+        if (icon === 'creditcard') {
+            deliveryMethod.src = '/assets/images/creditcard.png';
+        } else if (icon === 'ideal') {
+            deliveryMethod.src = '/assets/images/ideal.png';
+        } else if (icon === 'paypal') {
+            deliveryMethod.src = '/assets/images/paypal.png';
         }
-    }
+    });
 </script>
 
-<head>
-    <title>Shopping Cart</title>
-</head>
-
-<body>
-    <h1>Shopping Cart</h1>
-    <form method="POST" action="/shoppingcart">
-        <input type="hidden" name="formType" value="updateCart">
-        <table>
-            <tr>
-                <th>Plaatje</th>
-                <th>Product ID</th>
-                <th>Prijs</th>
-                <th>Naam</th>
-                <th>Aantal</th>
-            </tr>
-            <?php
-            foreach ($_SESSION['shoppingCart'] as $product) {
-                $productId = $product[0];  // The product ID
-                $productName = $product[1];  // The product name
-                $productPrice = $product[2]; // The product price
-                $amount = $product[3];  // The amount
-
-                echo "
-                <tr>
-                    <td>plaatje</td>
-                    <td>$productId</td> 
-                    <td>$productPrice</td> 
-                    <td>$productName</td> 
-                    <td>
-                        <button type='submit' onclick='incrementAmount(\"$productId\")'>+</button>
-                    </td>
-                    <td>
-                        <label id='incrementText_$productId'>$amount</label>
-                        <input type='hidden' name='amounts[$productId]' id='hiddenInput_$productId' value='$amount'>
-                    </td> 
-                    <td>
-                        <button type='submit' onclick='decrementAmount(\"$productId\")'>-</button>
-                    </td>
-                </tr>
-            ";
-            }
-            ?>
-        </table>
-        <br>
-        <input type="hidden" name="formType" value="purchaseCart">
-    </form>
-    <form method="POST" action="/shoppingcart">
-        <input type="submit" name="PurchaseButton2" value="Koop winkelwagen">
-    </form>
 </body>
-<footer>
-
-</footer>
 </html>

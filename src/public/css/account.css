@@ -49,7 +49,6 @@ body, html {
     outline: none;
 }
 
-
 .sidebar {
     width: 250px;
     background-color: #2c3e50;
@@ -66,7 +65,7 @@ body, html {
 .sidebar ul {
     list-style: none;
     padding: 0;
-    margin: 20px 0 0;
+    margin: 20px 0 30px;
 }
 
 .sidebar ul li {
@@ -105,6 +104,11 @@ body, html {
     margin-bottom: 10px;
 }
 
+.admin-links * {
+    font-weight: bolder;
+    color: lightcoral !important;
+}
+
 .user-info p {
     font-size: 16px;
     line-height: 1.5;
@@ -113,4 +117,35 @@ body, html {
 
 .user-info p strong {
     color: #34495e;
+}
+
+button {
+    background: linear-gradient(to right, #C7914E, #61584D);
+    color: white;
+    padding: 5px;
+    width: 100%;
+    border: none;
+    border-radius: 15px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.admin-badge {
+    display: inline-block;
+    background-color: red;
+    color: white;
+    font-size: 0.9em;
+    font-weight: bold;
+    padding: 0.2em 0.5em;
+    margin-right: 0.5em;
+    border-radius: 5px;
+}
+
+button:hover {
+    background: linear-gradient(to right, #61584D, #C7914E);
+}
+
+button:focus {
+    outline: none;
 }

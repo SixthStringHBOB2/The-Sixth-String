@@ -2,8 +2,11 @@
 
 require_once 'Router.php';
 require_once 'services/authService.php';
+require_once 'services/shoppingCartService.php';
+require_once 'database/db.php';
 
 $auth = new Auth();
+$shoppingCartService = new ShoppingCartService($auth, getDbConnection());
 $router = new Router('/', $auth);
 
 $router->get('/', function () {
@@ -25,7 +28,7 @@ $router->get('/orders', function () {
     include 'views/orders.php';
 }, true);
 
-$router->get('/order/{id}', function ($id) {
+$router->get('/order/{id}', function ($id) use ($auth) {
     $_GET['id'] = $id;
     include 'views/order_details.php';
 }, true);
@@ -40,42 +43,48 @@ $router->any('/register', function () {
 });
 
 
-$router->get('/post/{id}', function ($id, $queryParams) {
-    include 'views/home.php';
-});
-
-$router->get('/products', function ()  {
+$router->any('/products', function () use ($auth) {
     include 'views/products.php';
 });
 
 $router->get('/search', function ($queryParams) {
-    $searchQuery = isset($queryParams['q']) ? $queryParams['q'] : 'No query';
+    $searchQuery = $queryParams['q'] ?? 'No query';
     echo "Search query: $searchQuery";
 });
 
-$router->get('/shoppingcart', function () {
+$router->any('/shoppingcart',  function () use ($auth, $shoppingCartService) {
     include 'views/shoppingcart.php';
 });
 
-$router->post('/shoppingcart', function () {
-    include 'views/shoppingcart.php';
+$router->post('/order-confirmation',  function () use ($auth, $shoppingCartService) {
+    include 'views/orderconfirm.php';
 });
 
-$router->get('/dashboard', function () {
+
+$router->get('/dashboard', function () use ($auth) {
+    if (!$auth->isAdminLogin()) {
+        header('Location: /');
+        exit;
+    }
     include 'views/dashboard.php';
-});
+}, true);
 
-$router->get('/purchase', function () {
-    include 'views/purchase.php';
-});
-
-$router->get('/crudpage', function () {
+$router->get('/crudpage', function () use ($auth) {
+    if (!$auth->isAdminLogin()) {
+        header('Location: /');
+        exit;
+    }
     include 'views/crudpage.php';
-});
+}, true);
 
-$router->post('/crudpage', function () {
+$router->post('/crudpage', function () use ($auth) {
+    if (!$auth->isAdminLogin()) {
+        header('Location: /');
+        exit;
+    }
     include 'views/crudpage.php';
-});
+}, true);
+
 
 $router->serveStatic($_SERVER['REQUEST_URI'], __DIR__);
 
