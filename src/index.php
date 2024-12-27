@@ -9,18 +9,18 @@ $auth = new Auth();
 $shoppingCartService = new ShoppingCartService($auth, getDbConnection());
 $router = new Router('/', $auth);
 
-$router->get('/', function () use ($shoppingCartService) {
+$router->get('/', function () use ($auth, $shoppingCartService) {
     include 'views/home.php';
 });
 
-$router->get('/account', function () use ($auth) {
+$router->get('/account', function () use ($auth, $shoppingCartService)  {
     $userData = $auth->getLoggedInUserData();
     $userName = $auth->getLoggedInUserName();
 
     include 'views/account.php';
 }, true);
 
-$router->any('/logout', function () use ($auth) {
+$router->any('/logout', function () use ($auth, $shoppingCartService)  {
     $auth->logout();
 }, true);
 
@@ -28,22 +28,22 @@ $router->get('/orders', function () {
     include 'views/orders.php';
 }, true);
 
-$router->get('/order/{id}', function ($id) use ($auth) {
+$router->get('/order/{id}', function ($id) use ($auth, $shoppingCartService)  {
     $_GET['id'] = $id;
     include 'views/order_details.php';
 }, true);
 
 
-$router->any('/login', function () {
+$router->any('/login', function ()use ($auth, $shoppingCartService) {
     include 'views/login.php';
 });
 
-$router->any('/register', function () {
+$router->any('/register', function ()use ($auth, $shoppingCartService) {
     include 'views/register.php';
 });
 
 
-$router->any('/products', function () use ($auth) {
+$router->any('/products', function () use ($auth, $shoppingCartService) {
     include 'views/products.php';
 });
 
@@ -61,7 +61,7 @@ $router->post('/order-confirmation',  function () use ($auth, $shoppingCartServi
 });
 
 
-$router->get('/dashboard', function () use ($auth) {
+$router->get('/dashboard', function () use ($auth, $shoppingCartService)  {
     if (!$auth->isAdminLogin()) {
         header('Location: /');
         exit;
@@ -69,7 +69,7 @@ $router->get('/dashboard', function () use ($auth) {
     include 'views/dashboard.php';
 }, true);
 
-$router->get('/crudpage', function () use ($auth) {
+$router->get('/crudpage', function () use ($auth, $shoppingCartService)  {
     if (!$auth->isAdminLogin()) {
         header('Location: /');
         exit;
@@ -77,7 +77,7 @@ $router->get('/crudpage', function () use ($auth) {
     include 'views/crudpage.php';
 }, true);
 
-$router->post('/crudpage', function () use ($auth) {
+$router->post('/crudpage', function () use ($auth, $shoppingCartService)  {
     if (!$auth->isAdminLogin()) {
         header('Location: /');
         exit;

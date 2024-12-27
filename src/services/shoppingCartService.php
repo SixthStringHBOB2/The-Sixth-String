@@ -87,7 +87,7 @@ class ShoppingCartService
     public function getCartCount()
     {
         if ($this->auth->isLoggedIn()) {
-            $userId = $this->auth->getUserId();
+            $userId = $this->auth->getLoggedInUserData()['id_user'];
             $cartId = $this->getShoppingCartId($userId);
             $sql = "SELECT SUM(amount) AS total_items FROM shopping_cart_item WHERE id_shopping_cart = ?";
             $stmt = $this->db->prepare($sql);

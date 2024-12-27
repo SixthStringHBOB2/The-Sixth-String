@@ -124,6 +124,11 @@
             </div>
             <div class="flexitem3">
                 <p class="link1">Over ons</p>
+                <?php if ($auth->isLoggedIn()): ?>
+                    <a class="link1" href="/account">Account</a>
+                <?php else: ?>
+                    <a class="link1" href="/login">Log in</a>
+                <?php endif; ?>
                 <a href="/shoppingcart" class="cart-container">
                     <img src="/assets/images/shoppingbasket.png" class="cart-icon" alt="Shopping Cart">
                     <span class="cart-count"><?= $cartCount ?></span>
