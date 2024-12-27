@@ -35,34 +35,34 @@
             <img src="Afbeeldingen/gitaar.jpg" class="img-item-frame1">
             <h3 class="h3-item-frame1">Gitaren</h3>
             <ul>
-                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Basgitaren</a></li>
-                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Elektrische gitaren</a></li>
-                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Akoestische gitaren</a></li>
-                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Gebruikte gitaren</a></li>
+                <li href="https://www.thesixthstring.com/products.php?categories=c1" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Basgitaren</a></li>
+                <li href="https://www.thesixthstring.com/products.php?categories=c2" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Elektrische gitaren</a></li>
+                <li href="https://www.thesixthstring.com/products.php?categories=c3" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Akoestische gitaren</a></li>
+                <li href="https://www.thesixthstring.com/products.php?categories=c4" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Gebruikte gitaren</a></li>
             </ul>
-            <a href="" class="button1">Bekijk alles</a>
+            <a href="https://www.thesixthstring.com/products.php" class="button1">Bekijk alles</a>
         </div>
         <div class="item-frame1 , flex-column-standaard"">
             <img src="Afbeeldingen/Versterker 1.jpg" class="img-item-frame1">
             <h3 class="h3-item-frame1">Versterkers</h3>
             <ul>
-                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Buizen versterkers</a></li>
-                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Transistor versterkers</a></li>
-                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Hybride versterkers</a></li>
-                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Gebruikte versterkers</a></li>
+                <li href="https://www.thesixthstring.com/products.php?categories=c5" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Buizen versterkers</a></li>
+                <li href="https://www.thesixthstring.com/products.php?categories=c6" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Transistor versterkers</a></li>
+                <li href="https://www.thesixthstring.com/products.php?categories=c7" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Hybride versterkers</a></li>
+                <li href="https://www.thesixthstring.com/products.php?categories=c8" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Gebruikte versterkers</a></li>
             </ul>
-        <a href="" class="button1">Bekijk alles</a>
+        <a href="https://www.thesixthstring.com/products.php" class="button1">Bekijk alles</a>
         </div>
         <div class="item-frame1  , flex-column-standaard"">
             <img src="Afbeeldingen/Gitaar accessoires 2.jpg" class="img-item-frame1"></img>
             <h3 class="h3-item-frame1">Accessoires</h3>
             <ul>
-                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Houders en standaarden</a></li>
-                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Straps</a></li>
-                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Microfoons</a></li>
-                <li href="" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Audio apperatuur</a></li>
+                <li href="https://www.thesixthstring.com/products.php?categories=c1" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Houders en standaarden</a></li>
+                <li href="https://www.thesixthstring.com/products.php?categories=c2" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Straps</a></li>
+                <li href="https://www.thesixthstring.com/products.php?categories=c3" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Microfoons</a></li>
+                <li href="https://www.thesixthstring.com/products.php?categories=c4" class ="link3" style="padding-bottom: 7px;"><a class="arrow">Audio apperatuur</a></li>
             </ul>
-            <a href="" class="button1">Bekijk alles</a>
+            <a href="https://www.thesixthstring.com/products.php" class="button1">Bekijk alles</a>
         </div>
     </div>
 
