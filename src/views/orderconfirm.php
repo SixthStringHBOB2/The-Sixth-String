@@ -15,7 +15,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($auth->isLoggedIn()) {
             $userId = $auth->getLoggedInUserData()['id_user'];
         } else {
-            $userId = $shoppingCartService->getOrCreateUserIdByEmail($email);
+            $userId = $shoppingCartService->getOrCreateUserIdByEmail(
+                $email,
+                $_POST['first_name'] ?? 'Guest',
+                $_POST['last_name'] ?? 'User',
+                $address,
+                $city,
+                $houseNumber,
+                $zipCode,
+                $country
+            );
+
         }
 
         $orderId = $shoppingCartService->createOrder($userId);

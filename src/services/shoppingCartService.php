@@ -256,8 +256,16 @@ class ShoppingCartService
         unset($_SESSION['shopping_cart']);
     }
 
-    public function getOrCreateUserIdByEmail($email, $firstName = "Guest", $lastName = "User", $address = "N/A", $city = "N/A", $houseNumber = "N/A", $zipCode = "N/A", $country = "N/A")
-    {
+    public function getOrCreateUserIdByEmail(
+        $email,
+        $firstName = null,
+        $lastName = null,
+        $address = null,
+        $city = null,
+        $houseNumber = null,
+        $zipCode = null,
+        $country = null
+    ) {
         $stmt = $this->db->prepare('SELECT id_user FROM user WHERE email_address = ?');
         $stmt->bind_param('s', $email);
         $stmt->execute();
@@ -268,16 +276,24 @@ class ShoppingCartService
             return $user['id_user'];
         }
 
+        $firstName = $firstName ?? 'Guest';
+        $lastName = $lastName ?? 'User';
+        $address = $address ?? 'N/A';
+        $city = $city ?? 'N/A';
+        $houseNumber = is_numeric($houseNumber) ? (int)$houseNumber : 0;
+        $zipCode = $zipCode ?? 'N/A';
+        $country = $country ?? 'N/A';
+
         $randomPassword = bin2hex(random_bytes(4));
         $hashedPassword = password_hash($randomPassword, PASSWORD_DEFAULT);
 
         $stmt = $this->db->prepare(
             'INSERT INTO user (first_name, last_name, email_address, password, address, city, house_number, zip_code, country, is_admin) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $isAdmin = 0;
         $stmt->bind_param(
-            'sssssssssi',
+            'sssssssisi',
             $firstName,
             $lastName,
             $email,
