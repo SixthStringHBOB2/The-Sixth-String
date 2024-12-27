@@ -1,4 +1,8 @@
-<!--TEST CODE VOOR DE HEADER-->
+<?php
+    $cartCount = $shoppingCartService->getCartCount();
+?>
+
+<!DOCTYPE html>
 <html>
 <head>
     <title>Header</title>
@@ -21,7 +25,7 @@
             text-decoration-line: underline;
             font-weight: bold;
             color: #444C50;
-            Padding: 0px 10px;
+            padding: 0px 10px;
             margin: 0px;
         }
 
@@ -38,13 +42,12 @@
         .fleximg {
             height: 55px;
             width: 55px;
-
             border-radius: 12px
         }
 
         .flexcontainer-row-header {
             display: flex;
-            flexdirection: row;
+            flex-direction: row;
             justify-content: space-between;
             background: white;
             padding: 2px 3px;
@@ -62,28 +65,44 @@
 
         .flexitem1 {
             width: 30%;
-            allign-self: left;
+            align-self: left;
             padding: 5px 0px;
         }
 
         .flexitem2 {
             width: 40%;
-            allign-self: center;
+            align-self: center;
             margin: 3px;
         }
 
         .flexitem3 {
-            width: 30%
-            allign-self: right;
+            width: 30%;
+            align-self: right;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .cart-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .cart-icon {
+            height: 30px;
+            width: 30px;
+        }
+
+        .cart-count {
+            font-weight: bold;
+            font-size: 16px;
+            color: #444C50;
         }
 
         .bgimg {
             background-position: top;
         }
-
-        /* STANDAARD OPMAAK */
-
-
     </style>
 </head>
 <body>
@@ -105,12 +124,18 @@
             </div>
             <div class="flexitem3">
                 <p class="link1">Over ons</p>
-
+                <?php if ($auth->isLoggedIn()): ?>
+                    <a class="link1" href="/account">Account</a>
+                <?php else: ?>
+                    <a class="link1" href="/login">Log in</a>
+                <?php endif; ?>
+                <a href="/shoppingcart" class="cart-container">
+                    <img src="/assets/images/shoppingbasket.png" class="cart-icon" alt="Shopping Cart">
+                    <span class="cart-count"><?= $cartCount ?></span>
+                </a>
             </div>
         </div>
     </div>
 </div>
-
-
 </body>
 </html>
