@@ -1,5 +1,6 @@
 <?php
 session_start();
+$id_item = $_SESSION['id_product'] ?? 12; //LAATSTE CIJFER VOOR TESTEN SPECIFIEKE PRODUCTEN
 
 function getDbConnection() {
     $host = "192.168.1.11";
@@ -21,8 +22,6 @@ function getDbConnection() {
 
     return $mysqli;
 }
-
-$id_item = 52; //HIER KOMT HET PRODUCT ID
 
 $dbConnection = getDbConnection();
 $query = "SELECT * FROM item WHERE `id_item` = $id_item;";
