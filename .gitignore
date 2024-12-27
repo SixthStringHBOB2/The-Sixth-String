@@ -117,3 +117,9 @@ fabric.properties
 # End of https://www.toptal.com/developers/gitignore/api/phpstorm
 
 .env
+/.idea/dataSources.xml
+/.idea/sqldialects.xml
+/.idea/php.xml
+/.idea/git_toolbox_prj.xml
+/.idea/vcs.xml
+/.idea/git_toolbox_blame.xml

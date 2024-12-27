@@ -42,7 +42,7 @@ class Router
     public function serveStatic($uri, $filePath)
     {
         if (preg_match('/^\/assets\//', $uri)) {
-            $assetPath = $filePath . '/public' . str_replace('/assets', '', $uri);
+            $assetPath = $filePath . str_replace('/assets', '/public', $uri);
 
             if (file_exists($assetPath)) {
                 $extension = pathinfo($assetPath, PATHINFO_EXTENSION);
