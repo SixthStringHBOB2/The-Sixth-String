@@ -142,9 +142,97 @@ function updateDatabase($id_item) {
 <html>
 <head>
     <title>Item Management</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        table th, table td {
+            padding: 12px 15px;
+            text-align: center;
+        }
+        table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+            color: #333;
+        }
+        table td {
+            border-bottom: 1px solid #ddd;
+        }
+        table tr:last-child td {
+            border-bottom: none;
+        }
+        table tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        h2 {
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+        .bewerkenButton {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #2196F3;
+            color: white;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .bewerkenButton:hover {
+            background-color: #1976D2;
+            transform: scale(1.05);
+        }
+        .verwijderenButton {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #F44336;
+            color: white;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .verwijderenButton:hover {
+            background-color: #D32F2F;
+            transform: scale(1.05);
+        }
+        .aanmakenButton {
+            padding: 6px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            background-color: #2196F3;
+            color: white;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .aanmakenButton:hover {
+            background-color: #1976D2;
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 <body style="background-color:white;">
-<h2 style="color: black">Item List</h2>
+<h2 style="color: black">Producten</h2>
 <table>
     <thead>
     <tr>
@@ -169,30 +257,30 @@ function updateDatabase($id_item) {
     </tr>
     </thead>
     <tbody>
-        <tr>
-            <form method='post' action='/crudpage'>
-                <td><input type='text' name='id_item' readonly style='width: 60px;' required></td>
-                <td><input type='text' name='name' style='width: 100px;' required></td>
-                <td><input type='text' name='colour' style='width: 80px;' required></td>
-                <td><input type='number' name='price' style='width: 80px;' step="0.01" required></td>
-                <td><input type='number' name='weight' style='width: 80px;' step="0.01" required></td>
-                <td><input type='number' name='size' style='width: 80px;' step="0.01" required></td>
-                <td><input type='number' name='amount_frets' style='width: 80px;' required></td>
-                <td><input type='number' name='amount_strings' style='width: 80px;' required></td>
-                <td><input type='number' name='consumption' style='width: 80px;' step="0.01" required></td>
-                <td><input type='text' name='built_in_effects' style='width: 120px;' required></td>
-                <td><input type='text' name='description' style='width: 120px;' required></td>
-                <td><input type='number' name='discount' style='width: 80px;' step="0.01" required></td>
-                <td><input type='number' name='is_used' style='width: 80px;' required></td>
-                <td><input type='text' name='used_damage' style='width: 80px;' required></td>
-                <td><input type='datetime-local' name='used_age' style='width: 80px;' required></td>
-                <td><input type='number' name='id_category' style='width: 80px;' required></td>
-                <td><input type='number' name='id_brand' style='width: 80px;' required></td>
-                <td>
-                    <button type='submit' name='Create'>Aanmaken</button>
-                </td>
-            </form>
-        </tr>
+    <tr>
+        <form method='post' action='/crudpage'>
+            <td><input type='text' name='id_item' readonly style='width: 60px;' required></td>
+            <td><input type='text' name='name' style='width: 100px;' required></td>
+            <td><input type='text' name='colour' style='width: 80px;' required></td>
+            <td><input type='number' name='price' style='width: 80px;' step="0.01" required></td>
+            <td><input type='number' name='weight' style='width: 80px;' step="0.01" required></td>
+            <td><input type='number' name='size' style='width: 80px;' step="0.01" required></td>
+            <td><input type='number' name='amount_frets' style='width: 80px;' required></td>
+            <td><input type='number' name='amount_strings' style='width: 80px;' required></td>
+            <td><input type='number' name='consumption' style='width: 80px;' step="0.01" required></td>
+            <td><input type='text' name='built_in_effects' style='width: 120px;' required></td>
+            <td><input type='text' name='description' style='width: 120px;' required></td>
+            <td><input type='number' name='discount' style='width: 80px;' step="0.01" required></td>
+            <td><input type='number' name='is_used' style='width: 80px;' required></td>
+            <td><input type='text' name='used_damage' style='width: 80px;' required></td>
+            <td><input type='datetime-local' name='used_age' style='width: 80px;' required></td>
+            <td><input type='number' name='id_category' style='width: 80px;' required></td>
+            <td><input type='number' name='id_brand' style='width: 80px;' required></td>
+            <td>
+                <button class='aanmakenButton' type='submit' name='Create'>Aanmaken</button>
+            </td>
+        </form>
+    </tr>
     </tbody>
 
     <tbody>
@@ -219,8 +307,10 @@ function updateDatabase($id_item) {
                     <td><input type='text' name='id_category' value='" . $item['id_category'] . "' style='width: 80px;' required></td>
                     <td><input type='text' name='id_brand' value='" . $item['id_brand'] . "' style='width: 80px;' required></td>
                     <td>
-                        <button type='submit' name='edit' value='" . $item['id_item'] . "'>Bewerken</button>
-                        <button type='submit' name='delete' value='" . $item['id_item'] . "'>Verwijderen</button>
+                        <div class='button-container'>
+                            <button class='bewerkenButton' type='submit' name='edit' value='" . $item['id_item'] . "'>Bewerken</button>
+                            <button class='verwijderenButton' type='submit' name='delete' value='" . $item['id_item'] . "'>Verwijderen</button>
+                        </div>
                     </td>
                 </form>
             </tr>
@@ -234,3 +324,4 @@ function updateDatabase($id_item) {
     <?php include 'views/footer.php'; ?>
 </footer>
 </html>
+
