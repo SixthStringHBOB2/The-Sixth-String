@@ -1,4 +1,6 @@
 <?php
+include 'views/header.php';
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -141,8 +143,8 @@ function updateDatabase($id_item) {
 <head>
     <title>Item Management</title>
 </head>
-<body>
-<h2>Item List</h2>
+<body style="background-color:white;">
+<h2 style="color: black">Item List</h2>
 <table>
     <thead>
     <tr>
@@ -228,4 +230,7 @@ function updateDatabase($id_item) {
     </tbody>
 </table>
 </body>
+<footer style="margin-top: 50px;">
+    <?php include 'views/footer.php'; ?>
+</footer>
 </html>
