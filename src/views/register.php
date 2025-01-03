@@ -1,5 +1,7 @@
 <?php
 
+use services\Auth;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $firstName = $_POST['first_name'] ?? '';
     $lastName = $_POST['last_name'] ?? '';
@@ -26,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <link rel="stylesheet" href="/assets/css/auth.css">
 
-<form method="POST" action="/register">
+<form method="POST" action="../index.php">
     <h2>Account Informatie</h2>
 
     <label for="first_name">Voornaam</label>

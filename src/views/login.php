@@ -1,5 +1,7 @@
 <?php
 
+use services\Auth;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
@@ -18,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <link rel="stylesheet" href="/assets/css/auth.css">
 
-<form method="POST" action="/login">
+<form method="POST" action="../index.php">
     <input type="hidden" name="redirect_path" value="<?php echo htmlspecialchars($_GET['redirect_path'] ?? '/account'); ?>">
     <label for="email">E-mail</label>
     <input type="email" name="email" placeholder="Voer je e-mailadres in" required>

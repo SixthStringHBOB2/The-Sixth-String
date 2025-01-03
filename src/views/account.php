@@ -21,16 +21,16 @@
     <div class="sidebar">
         <h3>Account Menu</h3>
         <ul>
-            <li><a href="/account">Profiel</a></li>
-            <li><a href="/orders">Bestellingen</a></li>
-            <li><a href="/logout">Uitloggen</a></li>
+            <li><a href="../index.php">Profiel</a></li>
+            <li><a href="../index.php">Bestellingen</a></li>
+            <li><a href="../index.php">Uitloggen</a></li>
         </ul>
 
         <?php if ($auth->isAdminLogin()): ?>
             <h3>Admin</h3>
             <ul class="admin-links">
-                <li><a href="/crudpage">CRUD Pagina</a></li>
-                <li><a href="/dashboard">Dashboard</a></li>
+                <li><a href="../index.php">CRUD Pagina</a></li>
+                <li><a href="../index.php">Dashboard</a></li>
             </ul>
         <?php endif; ?>
     </div>
@@ -56,7 +56,7 @@
             <p><strong>Postcode:</strong> <?php echo htmlspecialchars($userData['zip_code']); ?></p>
         </div>
         <div class="logout-section">
-            <form action="/logout" method="POST">
+            <form action="../index.php" method="POST">
                 <button type="submit" class="logout-button">Uitloggen</button>
             </form>
         </div>

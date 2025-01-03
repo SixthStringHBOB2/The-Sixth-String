@@ -346,7 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <div class="sidebar">
         <h1>Betaling en Bezorging</h1>
-        <form action="/order-confirmation" method="POST">
+        <form action="../index.php" method="POST">
             <div class="form-group">
                 <label for="address">Straat</label>
                 <input

@@ -1,5 +1,6 @@
 <?php
 
+namespace services;
 class ShoppingCartService
 {
     private $db;
@@ -275,7 +276,8 @@ class ShoppingCartService
         $houseNumber = null,
         $zipCode = null,
         $country = null
-    ) {
+    )
+    {
         $stmt = $this->db->prepare('SELECT id_user FROM user WHERE email_address = ?');
         $stmt->bind_param('s', $email);
         $stmt->execute();

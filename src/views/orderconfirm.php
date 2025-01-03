@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h3>Order Menu</h3>
         <ul>
             <li><a href="/">Startpagina</a></li>
-            <li><a href="/orders">Mijn Bestellingen</a></li>
+            <li><a href="../index.php">Mijn Bestellingen</a></li>
             <li><a href="/order/<?= $orderId ?>">Bekijk Deze Bestelling</a></li>
         </ul>
     </div>

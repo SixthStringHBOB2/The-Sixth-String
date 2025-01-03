@@ -13,7 +13,7 @@
 <body style="background-color:white;">
 <img src="./public/images/Banner3.jpg" class="Banner-Img">
 <div>
-    <?php include './views/Header.php';?> <!--//INLADEN HEADER-->
+    <?php include './views/header.php';?> <!--//INLADEN HEADER-->
 </div>
 
     <div class="Content-standaard" style="height: 345px ">
@@ -90,7 +90,7 @@
 </div>
 
 <div>
-    <?php include './views/Footer.php';?> <!--//INLADEN FOOTER-->
+    <?php include './views/footer.php';?> <!--//INLADEN FOOTER-->
 </div>
 </body>
 

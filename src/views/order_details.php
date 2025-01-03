@@ -13,9 +13,9 @@
     <div class="sidebar">
         <h3>Account Menu</h3>
         <ul>
-            <li><a href="/account">Profiel</a></li>
-            <li><a href="/orders">Bestellingen</a></li>
-            <li><a href="/logout">Uitloggen</a></li>
+            <li><a href="../index.php">Profiel</a></li>
+            <li><a href="../index.php">Bestellingen</a></li>
+            <li><a href="../index.php">Uitloggen</a></li>
         </ul>
     </div>
 

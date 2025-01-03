@@ -2,8 +2,8 @@
 function getDbConnection() {
     $host = "192.168.1.11";
     $dbname = "thesixthstring";
-    $username = "thesixthstring";
-    $password = "HFIU67135dhaf";
+    $username = "default";
+    $password = "rEN28Sd8?W|L6FquVky>";
 
     // Check for missing environment variables
     if (!$host || !$dbname || !$username || !$password) {

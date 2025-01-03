@@ -189,15 +189,15 @@ function displayReviews($id_item) {
 <head>
     <meta charset="utf-8"> </meta>
     <title>Product <?php echo"$name" ?></title>
-    <link rel='stylesheet' type='text/css' href='./public/css/Stylesheet.css'> </link>
+    <link rel='stylesheet' type='text/css' href='../public/css/Stylesheet.css'> </link>
 </head>
 
 <body style="background-color:white;">
 
 
-<img src="./public/images/Banner4.jpg" class="Banner-Img">
+<img src="../public/images/Banner4.jpg" class="Banner-Img">
 <div>
-    <?php include './views/Header.php';?>
+    <?php include './views/header.php';?>
 </div>
 
 <div class="Content-standaard" style="height: 345px ">
@@ -209,7 +209,7 @@ function displayReviews($id_item) {
 <div style="background-color: white; padding: 0px 20px 20px 5%;"><a href="" class="link3">Terug</a></div>
 
 <div style="background-color: white;" class="beschrijving-flex">
-    <img class="beschrijving-product-img" src="./public/images/Gitaartje.jpg""> <!--TEST AFBEELDING!-->
+    <img class="beschrijving-product-img" src="../public/images/Gitaartje.jpg""> <!--TEST AFBEELDING!-->
     <div class="beschrijving-product" style="min-width: 30%; min-height: 60%;">
         <div class="flex-row-standaard">
             <h2><?php echo($name) ?></h2>
@@ -362,7 +362,7 @@ function displayReviews($id_item) {
         <?php include './services/submitreview.php'; ?>
 
         <div class="review-form">
-            <form method="POST" action="/submitreview"> <!-- EXTERN BESTAND REGELD HET PLAATSEN VAN DE REVIEW -->
+            <form method="POST" action="../index.php"> <!-- EXTERN BESTAND REGELD HET PLAATSEN VAN DE REVIEW -->
 
                 <!-- Verborgen veld voor id_item -->
                 <input type="hidden" name="id_item" value="<?php echo htmlspecialchars($id_item, ENT_QUOTES, 'UTF-8'); ?>">
@@ -403,5 +403,5 @@ function displayReviews($id_item) {
 </div>
 
 <div>
-    <?php include './views/Footer.php';?>
+    <?php include './views/footer.php';?>
 </div>

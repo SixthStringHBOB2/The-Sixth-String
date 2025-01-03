@@ -119,11 +119,11 @@
             <div class="flexitem3" style="align-items: center;">
                 <!--<p class="link1">Over ons</p>-->
                 <?php if ($auth->isLoggedIn()): ?>
-                    <a class="link1" href="/account">Account</a>
+                    <a class="link1" href="../index.php">Account</a>
                 <?php else: ?>
-                    <a class="link1" href="/login">Log in</a>
+                    <a class="link1" href="../index.php">Log in</a>
                 <?php endif; ?>
-                <a href="/shoppingcart" class="cart-container">
+                <a href="../index.php" class="cart-container">
                     <span class="cart-count" style="align-items: center;"><?= $cartCount ?></span>
                     <img src="/assets/images/shoppingbasket.png" class="fleximg" alt="Shopping Cart">
                 </a>

@@ -1,5 +1,8 @@
 <?php
 
+use services\ShoppingCartService;
+
+include '../database/db.php';
 session_start();
 
 $selectedBrands = isset($_GET['brands']) ? explode(',', $_GET['brands']) : [];
@@ -128,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel='stylesheet' type='text/css' href='./public/css/Stylesheet.css'> </link>
+    <link rel='stylesheet' type='text/css' href='../public/css/Stylesheet.css'> </link>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -281,9 +284,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     </style>
 </head>
 <body style="background-color:white;">
-<img src="./public/images/Banner3.jpg" class="Banner-Img">
+<img src="../public/images/Banner3.jpg" class="Banner-Img">
 <div>
-    <?php include './views/Header.php';?> <!--//INLADEN HEADER-->
+    <?php include './views/header.php';?> <!--//INLADEN HEADER-->
 </div>
 
 <div class="Content-standaard" style="height: 345px ">
@@ -576,14 +579,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         <div class="product-grid">
             <?php while ($product = $products->fetch_assoc()): ?>
                 <div class="product">
-                    <a href="/productdetailpagina?product_id=<?= $product['id_item'] ?>">
+                    <a href="../index.php">
                         <?= htmlspecialchars($product['name']) ?>
                         <img src="../public/images/product.png" alt="Default Product Image">
                     </a>
                     <div class="container" style="justify-content: space-between">
                         <div style="flex-direction: column">
                             <h4>
-                                <a href="/productdetailpagina?product_id=<?= $product['id_item'] ?>">
+                                <a href="../index.php">
                                     <?= htmlspecialchars($product['name']) ?>
                                 </a>
                             </h4>
@@ -601,7 +604,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                         }
                         ?>
 
-                        <form method="POST" action="/products" style="display:inline;">
+                        <form method="POST" action="../index.php" style="display:inline;">
                             <input type="text" name="id_item" value="<?= $product['id_item'] ?>" hidden>
                             <input type="number" name="amount" value="1" style="width: 40px;" hidden>
                             <input type="hidden" name="price" value="<?= $product['price'] ?>">
@@ -618,7 +621,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                         (<?= number_format($product['avg_rating'], 1) ?>)
                     </p>
                     <p>
-                        <a href="/productdetailpagina?product_id=<?= $product['id_item'] ?>">
+                        <a href="../index.php">
                             Bekijk product
                         </a>
                         <!--<a href="/products/<?= $product['id_item'] ?>#reviews">Bekijk</a>-->
@@ -635,7 +638,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     </div>
 </div>
 <div>
-    <?php include './views/Footer.php';?> <!--//INLADEN FOOTER-->
+    <?php include './views/footer.php';?> <!--//INLADEN FOOTER-->
 </div>
 </body>
 </html>

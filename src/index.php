@@ -1,5 +1,8 @@
 <?php
 
+use services\Auth;
+use services\ShoppingCartService;
+
 require_once 'Router.php';
 require_once 'services/authService.php';
 require_once 'services/shoppingCartService.php';

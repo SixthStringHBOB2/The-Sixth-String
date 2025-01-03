@@ -1,7 +1,9 @@
 <?php
 
+namespace services;
 session_start();
 include 'database/db.php';
+
 class Auth
 {
     private $pdo;
