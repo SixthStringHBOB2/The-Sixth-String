@@ -5,6 +5,7 @@ require_once 'services/authService.php';
 require_once 'services/shoppingCartService.php';
 require_once 'database/db.php';
 
+
 $auth = new Auth();
 $shoppingCartService = new ShoppingCartService($auth, getDbConnection());
 $router = new Router('/', $auth);
@@ -69,6 +70,10 @@ $router->get('/dashboard', function () use ($auth, $shoppingCartService)  {
     include 'views/dashboard.php';
 }, true);
 
+$router->get('/productdetailpagina', function () use ($auth, $shoppingCartService) {
+    include 'views/productdetailpagina.php';
+});
+
 $router->get('/crudpage', function () use ($auth, $shoppingCartService)  {
     if (!$auth->isAdminLogin()) {
         header('Location: /');
@@ -85,6 +90,14 @@ $router->post('/crudpage', function () use ($auth, $shoppingCartService)  {
     include 'views/crudpage.php';
 }, true);
 
+$router->any('/productdetailpagina/{id}', function ($id) use ($auth, $shoppingCartService)  {
+    $_GET['id'] = $id;
+    include 'views/productdetailpagina.php';
+}, true);
+
+$router->any('/submitreview', function () use ($auth, $shoppingCartService) {
+    include 'services/submitreview.php';
+});
 
 $router->serveStatic($_SERVER['REQUEST_URI'], __DIR__);
 

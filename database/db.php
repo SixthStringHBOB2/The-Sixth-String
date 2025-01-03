@@ -1,9 +1,9 @@
 <?php
 function getDbConnection() {
-    $host = "192.168.1.11";
+    $host = "localhost";
     $dbname = "thesixthstring";
-    $username = "default";
-    $password = "rEN28Sd8?W|L6FquVky>";
+    $username = "thesixthstring";
+    $password = "HFIU67135dhaf";
 
     // Check for missing environment variables
     if (!$host || !$dbname || !$username || !$password) {

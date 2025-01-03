@@ -1,0 +1,135 @@
+<?php
+    $cartCount = $shoppingCartService->getCartCount();
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Header</title>
+    <style>
+        html{font-family:Inter,sans-serif,Arial,sans-serif}
+        body {margin: 0px;
+
+        .header{padding: 20px;}
+
+
+        .zoek{
+            /*border: 3px solid #FC914E;*/
+            /*border-style: solid;*/
+            background: linear-gradient(white, white) padding-box,
+            linear-gradient(to right, #FC914E, #947957) border-box;
+            border: 3px solid transparent;
+            border-radius: 999px;
+            margin: 0px;
+            padding: 10px;
+            text-align: left;
+            width: 100%;
+            align-self;
+            @media (max-width: 1000px) {
+                width: calc()
+            }
+        }
+
+        .fleximg{height: 55px;
+            width: 55px;
+            border-radius: 12px}
+
+        .flexcontainer-row-header{
+            background: white;
+            padding: 2px 3px;
+            border-radius: 15px;
+            align-items: center;
+            @media(min-width: 1000px){
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                align-items: center;}
+            @media(max-width:1000px){
+                display: flex;
+                flex-direction: column;)
+            justify-content: flex-start;
+                align-items: baseline;
+            }}
+
+        .flexcontainer-row{display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            margin: 3px;}
+
+        .flexitem1{
+            align-self:left;
+            padding: 5px 0px;
+            min-width: 25%;
+            @media {
+                max-width: 1000px;
+                align-self: flex-start}}
+        .flexitem2{
+            align-self: center;
+            margin: 3px;
+            min-width: 35%;
+            height: 40.63px;
+            @media (max-width: 1000px;){
+            align-self: center;}
+        }
+        .flexitem3{@media(min-width: 1000px){
+            display: flex;
+            flex-direction: row-reverse;
+            min-width: 25%;}
+            @media (max-width: 1000px;){
+            display: flex;
+            flex-direction: row-reverse;
+            height: 40.63px;
+        }}
+        .pHeader{margin: 20px 0px}
+        .flexrecht{
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;}
+
+        .cart-count {
+            font-weight: bold;
+            font-size: 16px;
+            color: #444C50;}
+
+        .cart-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;}
+
+    </style>
+</head>
+<body>
+<div>
+    <div class="header";">
+        <div class="flexcontainer-row-header">
+            <div class="flexcontainer-row , flexitem1">
+                <div>
+                    <a href="https://www.thesixthstring.com"><img src="../public/images/Logo2.jpg" class="fleximg"></a>
+                </div>
+                <div class="flexcontainer-row" class="flexitem1">
+                    <a href="https://www.thesixthstring.com/products?categories=c1"><p class="link1 , pHeader" >Gitaren</p></a>
+                    <a href="https://www.thesixthstring.com/products?categories=c5"><p class="link1 , pHeader">Versterkers</p></a>
+                    <a href="https://www.thesixthstring.com/products?categories=c10"><p class="link1 , pHeader">Accessoires</p></a>
+                </div>
+            </div >
+            <div class="flexitem2">
+                <input type="search" class="zoek" max="75" placeholder="Zoeken..."></input>
+            </div>
+            <div class="flexitem3" style="align-items: center;">
+                <!--<p class="link1">Over ons</p>-->
+                <?php if ($auth->isLoggedIn()): ?>
+                    <a class="link1" href="/account">Account</a>
+                <?php else: ?>
+                    <a class="link1" href="/login">Log in</a>
+                <?php endif; ?>
+                <a href="/shoppingcart" class="cart-container">
+                    <span class="cart-count" style="align-items: center;"><?= $cartCount ?></span>
+                    <img src="/assets/images/shoppingbasket.png" class="fleximg" alt="Shopping Cart">
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

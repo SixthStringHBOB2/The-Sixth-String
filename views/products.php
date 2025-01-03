@@ -1,5 +1,7 @@
 <?php
 
+session_start();
+
 $selectedBrands = isset($_GET['brands']) ? explode(',', $_GET['brands']) : [];
 $selectedBrands = array_map(function ($brands) {
     return (int)ltrim($brands, 'b');
@@ -116,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     exit();
 }
 
+
 ?>
 
 <!DOCTYPE html>
@@ -125,16 +128,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Products</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel='stylesheet' type='text/css' href='./public/css/Stylesheet.css'> </link>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: white;
         }
 
         .container {
             display: flex;
             flex-direction: row;
+            background-color: white;
         }
 
         .filter-bar {
@@ -274,8 +280,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
     </style>
 </head>
-<body>
+<body style="background-color:white;">
+<img src="./public/images/Banner3.jpg" class="Banner-Img">
+<div>
+    <?php include './views/Header.php';?> <!--//INLADEN HEADER-->
+</div>
 
+<div class="Content-standaard" style="height: 345px ">
+    <h1>The Sixth String</h1>
+    <p class="H1subtitle">Jouw gitaar specialist</p>
+
+</div>
+
+<div class="white-seperation-bar"></div>
 <div class="container">
     <!-- Filter selection -->
     <div class="bg-white p-6 rounded-lg shadow-md w-64" id="filter-bar">
@@ -441,29 +458,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         function updateURLWithFilters() {
             const selectedFilters = getSelectedFilters();
 
+            if (!selectedFilters) {
+                console.error("Selected filters are null or undefined.");
+                return;
+            }
+
             const params = new URLSearchParams();
 
-            if (selectedFilters.brands.length > 0) {
+            if (Array.isArray(selectedFilters.brands) && selectedFilters.brands.length > 0) {
                 params.set('brands', selectedFilters.brands.join(','));
             }
 
-            if (selectedFilters.categories.length > 0) {
+            if (Array.isArray(selectedFilters.categories) && selectedFilters.categories.length > 0) {
                 params.set('categories', selectedFilters.categories.join(','));
             }
 
-            if (selectedFilters.states.length > 0) {
+            if (Array.isArray(selectedFilters.states) && selectedFilters.states.length > 0) {
                 params.set('states', selectedFilters.states.join(','));
             }
 
-            params.set('minPrice', selectedFilters.minPrice);
-            params.set('maxPrice', selectedFilters.maxPrice);
+            if (selectedFilters.minPrice !== undefined) {
+                params.set('minPrice', selectedFilters.minPrice);
+            }
 
-            if (selectedFilters.review.length > 0) {
+            if (selectedFilters.maxPrice !== undefined) {
+                params.set('maxPrice', selectedFilters.maxPrice);
+            }
+
+            if (Array.isArray(selectedFilters.review) && selectedFilters.review.length > 0) {
                 params.set('reviews', selectedFilters.review.join(','));
             }
 
             window.history.pushState({}, '', '?' + params.toString());
         }
+
 
         document.getElementById('applyFilters').addEventListener('click', function () {
             updateURLWithFilters();
@@ -541,24 +569,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
 
         });
 
+
     </script>
 
     <div class="products">
         <div class="product-grid">
             <?php while ($product = $products->fetch_assoc()): ?>
                 <div class="product">
-                    <a href="/products/<?= $product['id_item'] ?>">
+                    <a href="/productdetailpagina?product_id=<?= $product['id_item'] ?>">
+                        <?= htmlspecialchars($product['name']) ?>
                         <img src="../public/images/product.png" alt="Default Product Image">
                     </a>
                     <div class="container" style="justify-content: space-between">
                         <div style="flex-direction: column">
                             <h4>
-                                <a href="/products/<?= $product['id_item'] ?>">
+                                <a href="/productdetailpagina?product_id=<?= $product['id_item'] ?>">
                                     <?= htmlspecialchars($product['name']) ?>
                                 </a>
                             </h4>
                             <p class="price">€<?= number_format($product['price'], 2) ?></p>
                         </div>
+
 
                         <?php
                         $item_count = 0;
@@ -587,7 +618,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                         (<?= number_format($product['avg_rating'], 1) ?>)
                     </p>
                     <p>
-                        <a href="/products/<?= $product['id_item'] ?>#reviews">Bekijk</a>
+                        <a href="/productdetailpagina?product_id=<?= $product['id_item'] ?>">
+                            Bekijk product
+                        </a>
+                        <!--<a href="/products/<?= $product['id_item'] ?>#reviews">Bekijk</a>-->
                     </p>
                 </div>
             <?php endwhile; ?>
@@ -600,6 +634,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         </div>
     </div>
 </div>
-
+<div>
+    <?php include './views/Footer.php';?> <!--//INLADEN FOOTER-->
+</div>
 </body>
 </html>
