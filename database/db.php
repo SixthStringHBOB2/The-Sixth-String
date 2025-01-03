@@ -1,6 +1,6 @@
 <?php
 function getDbConnection() {
-    $host = "localhost";
+    $host = "192.168.1.11";
     $dbname = "thesixthstring";
     $username = "thesixthstring";
     $password = "HFIU67135dhaf";
